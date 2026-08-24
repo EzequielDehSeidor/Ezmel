@@ -12,6 +12,7 @@ import {
   AlignmentType,
 } from "docx";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
+import { formatCurrencyAR } from "@/lib/format/currency";
 import type { ExportFileData, ExportInput } from "./common";
 
 const LABEL_WIDTH = 3300;
@@ -186,7 +187,7 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
 
     spacer(),
     heading("2. Monto de préstamo"),
-    labelValueTable([["Monto de Préstamo", `$ ${Number(data.montoPrestamo || 0).toFixed(2)}`]]),
+    labelValueTable([["Monto de Préstamo", formatCurrencyAR(data.montoPrestamo)]]),
 
     spacer(),
     heading("3. Servicios"),

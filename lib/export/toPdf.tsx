@@ -1,5 +1,6 @@
 import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
+import { formatCurrencyAR } from "@/lib/format/currency";
 import type { ExportFileData, ExportInput } from "./common";
 
 const styles = StyleSheet.create({
@@ -166,7 +167,7 @@ function LegajoPdfDocument({ data, files }: Props) {
         />
 
         <Text style={styles.heading}>2. MONTO DE PRÉSTAMO</Text>
-        <LabelValueTable rows={[["Monto de Préstamo", `$ ${Number(data.montoPrestamo || 0).toFixed(2)}`]]} />
+        <LabelValueTable rows={[["Monto de Préstamo", formatCurrencyAR(data.montoPrestamo)]]} />
 
         <Text style={styles.heading}>3. SERVICIOS</Text>
         <View style={styles.row}>

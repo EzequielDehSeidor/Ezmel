@@ -1,4 +1,5 @@
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
+import { formatCurrencyAR } from "@/lib/format/currency";
 import type { LegajoFileCategoryKey, LegajoFormValues } from "@/lib/types/legajo";
 import { AttachmentPreview } from "./AttachmentPreview";
 
@@ -65,7 +66,7 @@ export function LegajoDocumentPreview({
       <SectionBar>2. Monto de préstamo</SectionBar>
       <table className="w-full border-collapse text-sm">
         <tbody>
-          <Row label="Monto de Préstamo" value={`$ ${Number(data.montoPrestamo || 0).toFixed(2)}`} />
+          <Row label="Monto de Préstamo" value={formatCurrencyAR(data.montoPrestamo)} />
         </tbody>
       </table>
 

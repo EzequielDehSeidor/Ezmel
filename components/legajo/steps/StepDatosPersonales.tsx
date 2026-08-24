@@ -2,6 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import type { LegajoFormValues } from "@/lib/types/legajo";
+import { CurrencyInput } from "@/components/legajo/CurrencyInput";
 
 function Field({
   label,
@@ -39,6 +40,7 @@ export function StepDatosPersonales() {
   const {
     register,
     watch,
+    control,
     formState: { errors },
   } = useFormContext<LegajoFormValues>();
 
@@ -92,7 +94,7 @@ export function StepDatosPersonales() {
       <Section title="Monto de préstamo">
         <div className="max-w-xs">
           <Field label="Monto de Préstamo ($)">
-            <input type="number" step="0.01" className={inputClass} {...register("montoPrestamo")} />
+            <CurrencyInput name="montoPrestamo" control={control} className={inputClass} />
           </Field>
         </div>
       </Section>
