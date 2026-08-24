@@ -44,7 +44,15 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
     setLoading(true);
     try {
       // Los PDF se rasterizan acá, en el navegador, y viajan como imágenes.
-      const { meta, blobs } = await prepareUpload(files);
+      const { meta, blobs, totalBytes } = await prepareUpload(files);
+
+      // Límite fijo de Netlify Functions (6MB), no configurable. Avisamos
+      // antes de mandar el request para no depender de un 413 críptico.
+      if (totalBytes > 5.5 * 1024 * 1024) {
+        throw new Error(
+          `Los adjuntos pesan ${(totalBytes / (1024 * 1024)).toFixed(1)} MB y superan el límite de 6 MB del servidor. Sacá alguna captura o PDF, o subilos en menos cantidad.`
+        );
+      }
 
       const formData = new FormData();
       formData.append("data", JSON.stringify(data));
@@ -55,6 +63,11 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
       }
 
       const res = await fetch("/api/export", { method: "POST", body: formData });
+      if (res.status === 413) {
+        throw new Error(
+          "Los adjuntos superan el límite de 6 MB del servidor. Sacá alguna captura o PDF, o subilos en menos cantidad."
+        );
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         throw new Error(body?.error ?? "No se pudo generar la descarga");

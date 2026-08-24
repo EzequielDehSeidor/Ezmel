@@ -34,12 +34,16 @@ interface Lienzo {
  * Preferimos OffscreenCanvas: con un canvas normal pdfjs avanza su render con
  * requestAnimationFrame, que no dispara si la pestaña está en segundo plano y
  * deja el render colgado. Con OffscreenCanvas usa temporizadores.
+ *
+ * Se codifica en JPEG (no PNG): Netlify Functions corta el request en 6MB, y
+ * un PNG de una página escaneada a resolución alta pesa varias veces más que
+ * el mismo contenido en JPEG con calidad alta.
  */
 function crearLienzo(width: number, height: number): Lienzo {
   if (typeof OffscreenCanvas !== "undefined") {
     const canvas = new OffscreenCanvas(width, height);
     const ctx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D;
-    return { ctx, canvas, toBlob: () => canvas.convertToBlob({ type: "image/png" }) };
+    return { ctx, canvas, toBlob: () => canvas.convertToBlob({ type: "image/jpeg", quality: 0.82 }) };
   }
 
   const canvas = document.createElement("canvas");
@@ -49,18 +53,18 @@ function crearLienzo(width: number, height: number): Lienzo {
   return {
     ctx,
     canvas,
-    toBlob: () => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png")),
+    toBlob: () => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82)),
   };
 }
 
 /**
- * Rasteriza cada página de un PDF a PNG usando el Canvas del navegador.
+ * Rasteriza cada página de un PDF a JPEG usando el Canvas del navegador.
  *
  * Lo hacemos en el cliente a propósito: pdfjs necesita APIs de canvas que
  * node-canvas no expone, y con las que las páginas salían en blanco. Además
  * nos evita un módulo nativo en el servidor.
  */
-export async function pdfToPngPages(file: File, scale = 2): Promise<PngPage[]> {
+export async function pdfToPngPages(file: File, scale = 1.5): Promise<PngPage[]> {
   const pdfjsLib = await loadPdfjs();
   const doc = await pdfjsLib.getDocument({
     data: await file.arrayBuffer(),
