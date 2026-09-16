@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Ezmel
-=======
 # Ezmel — Legajos de Cliente
 
 App interna para armar el "Legajo de Cliente" (antes un Word) de forma digital: login de
@@ -101,4 +98,3 @@ Los assets de pdfjs (`worker`, `standard_fonts`, `cmaps`) viven en
   fecha (campos de texto, no una firma manuscrita).
 - En modo mock los archivos adjuntos no se persisten (sólo viajan para generar la
   descarga); en modo Supabase real sí se suben al bucket `legajo-files`.
->>>>>>> 70b69d1 (Initial commit)

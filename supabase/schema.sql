@@ -1,4 +1,4 @@
--- Ezmel — esquema inicial para Supabase (Legajos de Cliente)
+-- Ezmel — esquema inicial para Supabase (Legajos de Cliente y Contratos)
 -- Correr en el SQL Editor del proyecto de Supabase.
 
 create table if not exists public.legajos (
@@ -21,8 +21,17 @@ create table if not exists public.legajo_files (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.contratos (
+  id uuid primary key,
+  created_by uuid references auth.users (id),
+  created_at timestamptz not null default now(),
+  -- Todos los campos del formulario (ver lib/types/contrato.ts) como jsonb.
+  datos jsonb not null
+);
+
 alter table public.legajos enable row level security;
 alter table public.legajo_files enable row level security;
+alter table public.contratos enable row level security;
 
 -- v1: sólo hay rol admin (usuarios autenticados). Se puede restringir más
 -- adelante cuando se agregue el rol "usuario".
@@ -34,6 +43,11 @@ create policy "Admins pueden crear legajos" on public.legajos
 create policy "Admins pueden leer archivos de legajos" on public.legajo_files
   for select using (auth.role() = 'authenticated');
 create policy "Admins pueden crear archivos de legajos" on public.legajo_files
+  for insert with check (auth.role() = 'authenticated');
+
+create policy "Admins pueden leer contratos" on public.contratos
+  for select using (auth.role() = 'authenticated');
+create policy "Admins pueden crear contratos" on public.contratos
   for insert with check (auth.role() = 'authenticated');
 
 -- Storage: crear el bucket "legajo-files" (privado) desde el dashboard de
