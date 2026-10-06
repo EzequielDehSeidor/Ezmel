@@ -39,13 +39,24 @@ export interface ContratoContenido {
   };
 }
 
-const money = (n: number) => `$ ${new Intl.NumberFormat("es-AR").format(Math.round(n || 0))}`;
+const money = (n: number) => {
+  const centavos = Math.round((n || 0) * 100);
+  const format = new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: centavos % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+  return `$ ${format.format(centavos / 100)}`;
+};
 
 const PERIODICIDAD_PLURAL: Record<ContratoDatos["periodicidadPago"], string> = {
   mensual: "mensuales",
   quincenal: "quincenales",
   semanal: "semanales",
 };
+
+/** Líneas para completar a mano en las firmas (Nombre completo / DNI), igual que la línea de la firma. */
+export const LINEA_NOMBRE = "_".repeat(32);
+export const LINEA_DNI = "_".repeat(20);
 
 /** Texto fijo del contrato. */
 const t = (text: string): TextSegment => ({ text });
@@ -260,7 +271,7 @@ export function buildContratoContenido(datos: ContratoDatos): ContratoContenido 
         nombre: MUTUANTE_INFO.administradorNombre,
         documento: MUTUANTE_INFO.administradorDni,
       },
-      { rol: "Firma del MUTUARIO", nombre: datos.mutuarioNombre, documento: datos.mutuarioDni },
+      { rol: "Firma del MUTUARIO", nombre: "", documento: "" },
       {
         rol: "Firma del GARANTE (si hubiere)",
         nombre: datos.garanteNombre,

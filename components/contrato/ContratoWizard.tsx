@@ -1,22 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { FormProvider, useForm, type Resolver } from "react-hook-form";
+import { FormProvider, useForm, type DefaultValues, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { contratoDatosSchema, type ContratoDatosSchema } from "@/lib/validation/contratoSchema";
 import { StepIndicator } from "@/components/legajo/StepIndicator";
 import { StepFormularioContrato } from "./StepFormularioContrato";
 import { StepRevisionContrato } from "./StepRevisionContrato";
 
-const defaultValues: ContratoDatosSchema = {
+// Los montos arrancan vacíos (se muestran con placeholder) para poder escribir sin borrar un "0".
+const defaultValues: DefaultValues<ContratoDatosSchema> = {
   mutuarioNombre: "",
   mutuarioDni: "",
   mutuarioDomicilio: "",
   mutuarioEmail: "",
-  montoPrestado: 0,
-  montoADevolver: 0,
   cantidadCuotas: 1,
-  importeCuota: 0,
   periodicidadPago: "mensual",
   fechaPrimeraCuota: "",
   diasHabilesPago: 10,
@@ -47,6 +45,7 @@ const CONTRATO_STEP1_FIELDS: (keyof ContratoDatosSchema)[] = [
 export function ContratoWizard() {
   const [step, setStep] = useState(0);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [datos, setDatos] = useState<ContratoDatosSchema | null>(null);
 
   const methods = useForm<ContratoDatosSchema>({
     resolver: zodResolver(contratoDatosSchema) as Resolver<ContratoDatosSchema>,
@@ -57,6 +56,9 @@ export function ContratoWizard() {
   async function goNext() {
     const valid = await methods.trigger(CONTRATO_STEP1_FIELDS);
     if (!valid) return;
+    const parsed = contratoDatosSchema.safeParse(methods.getValues());
+    if (!parsed.success) return;
+    setDatos(parsed.data);
     setStep(1);
   }
 
@@ -70,8 +72,8 @@ export function ContratoWizard() {
         <StepIndicator steps={STEPS} current={step} />
 
         {step === 0 && <StepFormularioContrato />}
-        {step === 1 && (
-          <StepRevisionContrato datos={methods.getValues()} savedId={savedId} onSaved={setSavedId} />
+        {step === 1 && datos && (
+          <StepRevisionContrato datos={datos} savedId={savedId} onSaved={setSavedId} />
         )}
 
         <div className="flex justify-between border-t border-slate-200 pt-4">

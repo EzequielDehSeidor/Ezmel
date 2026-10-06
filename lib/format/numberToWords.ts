@@ -103,7 +103,12 @@ export function numeroALetras(valor: number): string {
 
 /** "$ 200.000" y su versión en letras: "doscientos mil pesos argentinos". */
 export function montoEnLetras(valor: number): string {
-  return `${numeroALetras(valor)} pesos argentinos`;
+  const totalCentavos = Math.round(Math.abs(valor) * 100);
+  const pesos = Math.floor(totalCentavos / 100);
+  const centavos = totalCentavos % 100;
+  const base = `${numeroALetras(pesos)} pesos argentinos`;
+  if (centavos === 0) return base;
+  return `${base} con ${centavos === 1 ? "un centavo" : `${numeroALetras(centavos)} centavos`}`;
 }
 
 function capitalize(s: string): string {

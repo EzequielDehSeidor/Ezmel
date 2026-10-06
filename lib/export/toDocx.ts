@@ -10,7 +10,9 @@ import {
   ShadingType,
   ImageRun,
   AlignmentType,
+  Footer,
 } from "docx";
+import { LOGO_ASPECT, LOGO_PNG } from "@/lib/brand/logo";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
 import { formatCurrencyAR } from "@/lib/format/currency";
 import type { ExportFileData, ExportInput } from "./common";
@@ -60,7 +62,7 @@ function heading(text: string) {
         children: [
           new TableCell({
             width: { size: TABLE_WIDTH, type: WidthType.DXA },
-            shading: { type: ShadingType.CLEAR, color: "auto", fill: "17284A" },
+            shading: { type: ShadingType.CLEAR, color: "auto", fill: "1A5F6F" },
             margins: { top: 80, bottom: 80, left: 120, right: 120 },
             children: [
               new Paragraph({
@@ -76,6 +78,14 @@ function heading(text: string) {
 
 function spacer() {
   return new Paragraph({ spacing: { before: 200, after: 60 }, children: [] });
+}
+
+function logoRun(widthPx: number) {
+  return new ImageRun({
+    type: "png",
+    data: LOGO_PNG,
+    transformation: { width: widthPx, height: Math.round(widthPx / LOGO_ASPECT) },
+  });
 }
 
 function fitToBox(width: number, height: number, maxWidth: number, maxHeight: number) {
@@ -155,7 +165,7 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { before: 200 },
-      children: [new TextRun({ text: "LEGAJO", bold: true, size: 56, color: "17284A" })],
+      children: [logoRun(200)],
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
@@ -250,6 +260,11 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
     sections: [
       {
         properties: { page: { size: { width: 12240, height: 15840 } } },
+        footers: {
+          default: new Footer({
+            children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [logoRun(90)] })],
+          }),
+        },
         children,
       },
     ],

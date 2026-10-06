@@ -7,13 +7,13 @@ function sectionRow(sheet: ExcelJS.Worksheet, title: string) {
   const row = sheet.addRow([title.toUpperCase()]);
   sheet.mergeCells(row.number, 1, row.number, 4);
   row.font = { bold: true, size: 11, color: { argb: "FFFFFFFF" } };
-  row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF17284A" } };
+  row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A5F6F" } };
 }
 
 function labelValueRow(sheet: ExcelJS.Worksheet, label: string, value: string | number) {
   const row = sheet.addRow([label, value]);
-  row.getCell(1).font = { bold: true, color: { argb: "FF17284A" } };
-  row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEEF2F9" } };
+  row.getCell(1).font = { bold: true, color: { argb: "FF1A5F6F" } };
+  row.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEAF4F4" } };
 }
 
 function categoryRows(
@@ -55,9 +55,9 @@ export async function generateXlsx(input: ExportInput): Promise<Buffer> {
 
   sectionRow(sheet, "3. Servicios");
   const serviciosHeader = sheet.addRow(["Servicio", "Titular", "Fecha", "Observaciones"]);
-  serviciosHeader.font = { bold: true, color: { argb: "FF17284A" } };
+  serviciosHeader.font = { bold: true, color: { argb: "FF1A5F6F" } };
   serviciosHeader.eachCell((cell) => {
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEEF2F9" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEAF4F4" } };
   });
   data.servicios.forEach((s) => sheet.addRow([s.servicio, s.titular, s.fecha, s.observaciones]));
 

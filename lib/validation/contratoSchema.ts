@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { parseMontoAR } from "@/lib/format/montoAR";
+
+const monto = z.preprocess(
+  parseMontoAR,
+  z.number({ error: "Ingresá un monto válido" }).positive("Debe ser mayor a 0")
+);
 
 export const contratoDatosSchema = z.object({
   mutuarioNombre: z.string().min(1, "Requerido"),
@@ -6,10 +12,10 @@ export const contratoDatosSchema = z.object({
   mutuarioDomicilio: z.string().min(1, "Requerido"),
   mutuarioEmail: z.string().email("Email inválido"),
 
-  montoPrestado: z.coerce.number().min(1, "Requerido"),
-  montoADevolver: z.coerce.number().min(1, "Requerido"),
+  montoPrestado: monto,
+  montoADevolver: monto,
   cantidadCuotas: z.coerce.number().int().min(1, "Requerido"),
-  importeCuota: z.coerce.number().min(1, "Requerido"),
+  importeCuota: monto,
   periodicidadPago: z.enum(["mensual", "quincenal", "semanal"]),
   fechaPrimeraCuota: z.string().min(1, "Requerido"),
   diasHabilesPago: z.coerce.number().int().min(1, "Requerido"),

@@ -118,7 +118,7 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
             <label key={key} className="flex items-center gap-2 text-sm text-slate-900">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-brand-border accent-[#17284a]"
+                className="h-4 w-4 rounded border-brand-border accent-[#1a5f6f]"
                 {...register(`checklist.${key}`)}
               />
               {CHECKLIST_LABELS[key]}
@@ -157,7 +157,7 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
             <label key={opt.id} className="flex items-center gap-2 text-sm text-slate-900">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-brand-border accent-[#17284a]"
+                className="h-4 w-4 rounded border-brand-border accent-[#1a5f6f]"
                 checked={formats.includes(opt.id)}
                 onChange={() => toggleFormat(opt.id)}
               />

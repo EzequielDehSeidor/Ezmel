@@ -42,7 +42,7 @@ export function PdfPagesPreview({ file }: { file: File }) {
           key={i}
           src={src}
           alt={`${file.name} — página ${i + 1}`}
-          className="w-full rounded-md border border-[#c8d3e6]"
+          className="w-full rounded-md border border-[#c3dadb]"
         />
       ))}
     </div>

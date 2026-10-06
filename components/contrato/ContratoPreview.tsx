@@ -1,8 +1,23 @@
-import { buildContratoContenido, type TextSegment } from "@/lib/contrato/buildContratoBlocks";
+import Image from "next/image";
+import {
+  buildContratoContenido,
+  LINEA_DNI,
+  LINEA_NOMBRE,
+  type TextSegment,
+} from "@/lib/contrato/buildContratoBlocks";
 import type { ContratoDatosSchema } from "@/lib/validation/contratoSchema";
 
+const HOJA_CLASS = "mx-auto max-w-3xl border border-slate-300 bg-white p-10 shadow-sm";
+const TITULO_CLASS =
+  "bg-[#1a5f6f] px-4 py-3 text-center text-[21px] font-bold uppercase tracking-wide text-white";
+const DATO_CLASS = "text-[15px] font-bold text-black";
+
 function SectionBar({ children }: { children: React.ReactNode }) {
-  return <h3 className="mb-1 mt-5 text-sm font-bold text-slate-900">{children}</h3>;
+  return (
+    <h3 className="mb-2 mt-6 bg-[#1a5f6f] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white">
+      {children}
+    </h3>
+  );
 }
 
 function Segments({ segments }: { segments: TextSegment[] }) {
@@ -10,7 +25,7 @@ function Segments({ segments }: { segments: TextSegment[] }) {
     <>
       {segments.map((s, i) =>
         s.bold ? (
-          <strong key={i} className="font-bold">
+          <strong key={i} className={DATO_CLASS}>
             {s.text}
           </strong>
         ) : (
@@ -25,48 +40,50 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
   const c = buildContratoContenido(datos);
 
   return (
-    <div
-      className="mx-auto max-w-3xl border border-slate-300 bg-white p-10 shadow-sm"
-      style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
-    >
-      <h1 className="text-center text-xl font-bold text-slate-900">{c.titulo}</h1>
+    <div className={HOJA_CLASS} style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div>
+        <h1 className={TITULO_CLASS}>{c.titulo}</h1>
+        <Image src="/logo.png" alt="EzMel" width={1200} height={262} unoptimized className="mx-auto mt-5 h-12 w-auto" />
 
-      <p className="mt-6 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
-        <Segments segments={c.intro} />
-      </p>
+        <p className="mt-6 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
+          <Segments segments={c.intro} />
+        </p>
 
-      {c.clausulas.map((cl) => (
-        <div key={cl.titulo}>
-          <SectionBar>{cl.titulo}</SectionBar>
-          <p className="whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
-            <Segments segments={cl.texto} />
-          </p>
-        </div>
-      ))}
-
-      <SectionBar>Firmas</SectionBar>
-      <div className="space-y-4">
-        {c.firmas.map((f) => (
-          <div key={f.rol} className="text-sm text-slate-800">
-            <p className="font-semibold text-[#17284a]">{f.rol}: __________</p>
-            <p>
-              Nombre completo: <strong className="font-bold">{f.nombre}</strong>
-            </p>
-            <p>
-              DNI: <strong className="font-bold">{f.documento}</strong>
+        {c.clausulas.map((cl) => (
+          <div key={cl.titulo}>
+            <SectionBar>{cl.titulo}</SectionBar>
+            <p className="whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
+              <Segments segments={cl.texto} />
             </p>
           </div>
         ))}
+
+        <SectionBar>Firmas</SectionBar>
+        <div className="space-y-12">
+          {c.firmas.map((f) => (
+            <div key={f.rol} className="text-sm text-slate-800">
+              <p className="font-semibold text-[#1a5f6f]">
+                {f.rol}: {LINEA_DNI}
+              </p>
+              <p className="mt-10">
+                Nombre completo: <strong className={DATO_CLASS}>{f.nombre || LINEA_NOMBRE}</strong>
+              </p>
+              <p className="mt-10">
+                DNI: <strong className={DATO_CLASS}>{f.documento || LINEA_DNI}</strong>
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-10 border-t-4 border-double border-[#17284a] pt-6">
-        <h1 className="text-center text-xl font-bold text-slate-900">{c.pagare.titulo}</h1>
+      <div className="mt-10 border-t-4 border-double border-[#1a5f6f] pt-6">
+        <h1 className={TITULO_CLASS}>{c.pagare.titulo}</h1>
         <p className="mt-4 text-sm text-slate-800">
           <span className="font-semibold">Por:</span> <Segments segments={c.pagare.por} />
         </p>
         <p className="text-sm text-slate-800">
           <span className="font-semibold">Vence el día:</span>{" "}
-          <strong className="font-bold">{c.pagare.vence}</strong>
+          <strong className={DATO_CLASS}>{c.pagare.vence}</strong>
         </p>
         <p className="mb-4 text-sm text-slate-800">
           <Segments segments={c.pagare.lugar} />
@@ -82,11 +99,17 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
           <Segments segments={c.pagare.ejecutivo} />
         </p>
 
-        <div className="mt-6 text-sm text-slate-800">
-          <p className="font-semibold text-[#17284a]">{c.pagare.firmanteLabel}</p>
-          <p>Documento N.º: {c.pagare.documento}</p>
-          <p>Domicilio: {c.pagare.domicilio}</p>
-          <p className="mt-2">Firma: __________</p>
+        <div className="mt-12 space-y-10 text-sm text-slate-800">
+          <p className="font-semibold text-[#1a5f6f]">
+            {c.pagare.firmanteLabel} {LINEA_NOMBRE}
+          </p>
+          <p>
+            Documento N.º: <strong className={DATO_CLASS}>{c.pagare.documento || LINEA_DNI}</strong>
+          </p>
+          <p>
+            Domicilio: <strong className={DATO_CLASS}>{c.pagare.domicilio || LINEA_NOMBRE}</strong>
+          </p>
+          <p>Firma: {LINEA_DNI}</p>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { LOGO_ASPECT, LOGO_PNG } from "@/lib/brand/logo";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
 import { formatCurrencyAR } from "@/lib/format/currency";
 import type { ExportFileData, ExportInput } from "./common";
@@ -6,7 +7,7 @@ import type { ExportFileData, ExportInput } from "./common";
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", color: "#1e293b" },
   bannerBar: {
-    backgroundColor: "#17284a",
+    backgroundColor: "#1a5f6f",
     color: "#ffffff",
     fontSize: 10,
     fontWeight: 700,
@@ -14,21 +15,20 @@ const styles = StyleSheet.create({
     padding: 6,
     letterSpacing: 2,
   },
-  title: { fontSize: 28, fontWeight: 700, color: "#17284a", textAlign: "center", marginTop: 12 },
   subtitle: { fontSize: 10, color: "#475569", textAlign: "center", marginBottom: 8 },
   heading: {
     fontSize: 10,
     fontWeight: 700,
     color: "#ffffff",
-    backgroundColor: "#17284a",
+    backgroundColor: "#1a5f6f",
     marginTop: 16,
     marginBottom: 6,
     padding: 6,
   },
-  row: { flexDirection: "row", borderBottom: "0.5pt solid #c8d3e6" },
-  labelCell: { width: "35%", backgroundColor: "#eef2f9", padding: 5, fontWeight: 700, color: "#17284a" },
+  row: { flexDirection: "row", borderBottom: "1pt solid #a9cbcd" },
+  labelCell: { width: "35%", backgroundColor: "#eaf4f4", padding: 5, fontWeight: 700, color: "#1a5f6f" },
   valueCell: { width: "65%", padding: 5 },
-  tableHeaderCell: { padding: 5, fontWeight: 700, backgroundColor: "#eef2f9", color: "#17284a" },
+  tableHeaderCell: { padding: 5, fontWeight: 700, backgroundColor: "#eaf4f4", color: "#1a5f6f" },
   tableCell: { padding: 5 },
   imagePage: {
     padding: 24,
@@ -40,6 +40,22 @@ const styles = StyleSheet.create({
   imageWrap: { display: "flex", flexDirection: "column", alignItems: "center", marginTop: 10 },
   imageCaption: { marginTop: 10, fontSize: 9, color: "#64748b", textAlign: "center" },
 });
+
+function Logo({ width }: { width: number }) {
+  return (
+    // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML img
+    <Image src={{ data: LOGO_PNG, format: "png" }} style={{ width, height: width / LOGO_ASPECT }} />
+  );
+}
+
+/** Logo en la esquina inferior derecha de cada hoja impresa. */
+function LogoFooter() {
+  return (
+    <View fixed style={{ position: "absolute", bottom: 8, right: 22 }}>
+      <Logo width={80} />
+    </View>
+  );
+}
 
 function LabelValueTable({ rows }: { rows: [string, string][] }) {
   return (
@@ -103,6 +119,7 @@ function CategoryPages({
       <Page size="A4" style={styles.page}>
         {encabezado}
         <Text>(sin archivos adjuntos)</Text>
+        <LogoFooter />
       </Page>
     );
   }
@@ -123,6 +140,7 @@ function CategoryPages({
               />
               <Text style={styles.imageCaption}>{image.caption}</Text>
             </View>
+            <LogoFooter />
           </Page>
         );
       })}
@@ -140,7 +158,9 @@ function LegajoPdfDocument({ data, files }: Props) {
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.bannerBar}>LEGAJO DE CLIENTE</Text>
-        <Text style={styles.title}>LEGAJO</Text>
+        <View style={{ alignItems: "center", marginTop: 12 }}>
+          <Logo width={150} />
+        </View>
         <Text style={styles.subtitle}>Carpeta de documentación del cliente</Text>
 
         <Text style={styles.heading}>DATOS GENERALES</Text>
@@ -187,6 +207,7 @@ function LegajoPdfDocument({ data, files }: Props) {
 
         <Text style={styles.heading}>4. OBSERVACIONES GENERALES</Text>
         <Text>{data.observacionesGenerales || "—"}</Text>
+        <LogoFooter />
       </Page>
 
       {/* Documentación adjunta: cada categoría con su título, y cada archivo
@@ -217,6 +238,7 @@ function LegajoPdfDocument({ data, files }: Props) {
             ["Fecha", data.fechaResponsable],
           ]}
         />
+        <LogoFooter />
       </Page>
     </Document>
   );

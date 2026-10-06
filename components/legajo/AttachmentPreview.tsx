@@ -12,7 +12,7 @@ export function AttachmentPreview({ file }: { file: File }) {
   if (isPdf) {
     return (
       <div>
-        <p className="mb-1 text-xs font-semibold text-[#17284a]">{file.name}</p>
+        <p className="mb-1 text-xs font-semibold text-[#1a5f6f]">{file.name}</p>
         <PdfPagesPreview file={file} />
       </div>
     );
@@ -20,10 +20,10 @@ export function AttachmentPreview({ file }: { file: File }) {
 
   return (
     <div>
-      <p className="mb-1 text-xs font-semibold text-[#17284a]">{file.name}</p>
+      <p className="mb-1 text-xs font-semibold text-[#1a5f6f]">{file.name}</p>
       {url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt={file.name} className="w-full rounded-md border border-[#c8d3e6]" />
+        <img src={url} alt={file.name} className="w-full rounded-md border border-[#c3dadb]" />
       )}
     </div>
   );

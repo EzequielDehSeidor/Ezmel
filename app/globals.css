@@ -5,10 +5,10 @@
   --foreground: #0f172a;
 
   /* Paleta tomada de la plantilla Word del legajo. */
-  --brand: #17284a;
-  --brand-hover: #22386a;
-  --brand-soft: #eef2f9;
-  --brand-border: #c8d3e6;
+  --brand: #1a5f6f;
+  --brand-hover: #237082;
+  --brand-soft: #eaf4f4;
+  --brand-border: #c3dadb;
 }
 
 @theme inline {

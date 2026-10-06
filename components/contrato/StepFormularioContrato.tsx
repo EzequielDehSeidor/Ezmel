@@ -78,10 +78,10 @@ export function StepFormularioContrato() {
       <Section title="Objeto del contrato">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Importe a prestar ($)" error={errors.montoPrestado?.message}>
-            <input type="number" step="1" className={inputClass} {...register("montoPrestado")} />
+            <input type="text" inputMode="decimal" placeholder="0" className={inputClass} {...register("montoPrestado")} />
           </Field>
           <Field label="Suma total ($)" error={errors.montoADevolver?.message}>
-            <input type="number" step="1" className={inputClass} {...register("montoADevolver")} />
+            <input type="text" inputMode="decimal" placeholder="0" className={inputClass} {...register("montoADevolver")} />
           </Field>
         </div>
       </Section>
@@ -89,7 +89,7 @@ export function StepFormularioContrato() {
       <Section title="Forma de devolución">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Suma total ($)">
-            <input type="number" readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
+            <input readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
           </Field>
           <div>
             <Field label="Cantidad de cuotas" error={errors.cantidadCuotas?.message}>
@@ -106,7 +106,7 @@ export function StepFormularioContrato() {
                 <label key={opt.id} className="flex items-center gap-1.5 text-sm text-slate-900">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 rounded border-brand-border accent-[#17284a]"
+                    className="h-4 w-4 rounded border-brand-border accent-[#1a5f6f]"
                     checked={periodicidadPago === opt.id}
                     onChange={() => setValue("periodicidadPago", opt.id, { shouldValidate: true })}
                   />
@@ -116,7 +116,7 @@ export function StepFormularioContrato() {
             </div>
           </div>
           <Field label="Importe por cuota ($)" error={errors.importeCuota?.message}>
-            <input type="number" step="1" className={inputClass} {...register("importeCuota")} />
+            <input type="text" inputMode="decimal" placeholder="0" className={inputClass} {...register("importeCuota")} />
           </Field>
           <Field label="Fecha de inicio" error={errors.fechaPrimeraCuota?.message}>
             <input type="date" className={inputClass} {...register("fechaPrimeraCuota")} />
@@ -138,7 +138,7 @@ export function StepFormularioContrato() {
       <Section title="Pagaré">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Importe ($)">
-            <input type="number" readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
+            <input readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
           </Field>
           <Field label="Vence el día" error={errors.fechaVencimientoPagare?.message}>
             <input type="date" className={inputClass} {...register("fechaVencimientoPagare")} />
@@ -147,7 +147,7 @@ export function StepFormularioContrato() {
             <input readOnly tabIndex={-1} className={readOnlyInputClass} value={fechaContrato || ""} />
           </Field>
           <Field label="Suma total ($)">
-            <input type="number" readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
+            <input readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
           </Field>
         </div>
       </Section>

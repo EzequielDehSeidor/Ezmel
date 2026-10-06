@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
 import { formatCurrencyAR } from "@/lib/format/currency";
 import type { LegajoFileCategoryKey, LegajoFormValues } from "@/lib/types/legajo";
@@ -6,10 +7,10 @@ import { AttachmentPreview } from "./AttachmentPreview";
 function Row({ label, value }: { label: string; value: string | number }) {
   return (
     <tr>
-      <td className="w-64 border border-[#c8d3e6] bg-[#eef2f9] px-3 py-2 font-bold text-[#17284a]">
+      <td className="w-64 border border-[#c3dadb] bg-[#eaf4f4] px-3 py-2 font-bold text-[#1a5f6f]">
         {label}
       </td>
-      <td className="border border-[#c8d3e6] px-3 py-2 text-slate-900">{value || "—"}</td>
+      <td className="border border-[#c3dadb] px-3 py-2 text-slate-900">{value || "—"}</td>
     </tr>
   );
 }
@@ -17,7 +18,7 @@ function Row({ label, value }: { label: string; value: string | number }) {
 /** Barra de sección azul marino, igual a la plantilla Word del legajo. */
 function SectionBar({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mb-3 mt-8 bg-[#17284a] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white">
+    <h3 className="mb-3 mt-8 bg-[#1a5f6f] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white">
       {children}
     </h3>
   );
@@ -30,12 +31,18 @@ export function LegajoDocumentPreview({
   data: LegajoFormValues;
   files: Partial<Record<LegajoFileCategoryKey, File[]>>;
 }) {
+  const serviciosConDatos = data.servicios.filter((s) =>
+    [s.titular, s.fecha, s.observaciones].some((v) => v?.trim())
+  );
+
   return (
-    <div className="mx-auto max-w-3xl border border-[#c8d3e6] bg-white p-10 shadow-sm">
-      <div className="bg-[#17284a] px-4 py-2 text-center text-sm font-bold uppercase tracking-[0.2em] text-white">
+    <div className="mx-auto max-w-3xl border border-[#c3dadb] bg-white p-10 shadow-sm">
+      <div className="bg-[#1a5f6f] px-4 py-2 text-center text-sm font-bold uppercase tracking-[0.2em] text-white">
         Legajo de Cliente
       </div>
-      <h1 className="mt-4 text-center text-4xl font-bold text-[#17284a]">LEGAJO</h1>
+      <h1 className="mb-1 mt-5">
+        <Image src="/logo.png" alt="EzMel" width={1200} height={262} unoptimized className="mx-auto h-12 w-auto" />
+      </h1>
       <p className="mb-2 text-center text-sm italic text-slate-600">
         Carpeta de documentación del cliente
       </p>
@@ -70,35 +77,39 @@ export function LegajoDocumentPreview({
         </tbody>
       </table>
 
-      <SectionBar>3. Servicios</SectionBar>
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr>
-            {["Servicio", "Titular", "Fecha", "Observaciones"].map((h) => (
-              <th
-                key={h}
-                className="border border-[#c8d3e6] bg-[#eef2f9] px-3 py-2 text-left font-bold text-[#17284a]"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.servicios.map((row) => (
-            <tr key={row.servicio}>
-              <td className="border border-[#c8d3e6] px-3 py-2 font-semibold text-slate-900">
-                {row.servicio}
-              </td>
-              <td className="border border-[#c8d3e6] px-3 py-2 text-slate-900">{row.titular || "—"}</td>
-              <td className="border border-[#c8d3e6] px-3 py-2 text-slate-900">{row.fecha || "—"}</td>
-              <td className="border border-[#c8d3e6] px-3 py-2 text-slate-900">
-                {row.observaciones || "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {serviciosConDatos.length > 0 && (
+        <>
+          <SectionBar>3. Servicios</SectionBar>
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr>
+                {["Servicio", "Titular", "Fecha", "Observaciones"].map((h) => (
+                  <th
+                    key={h}
+                    className="border border-[#c3dadb] bg-[#eaf4f4] px-3 py-1.5 text-left font-bold text-[#1a5f6f]"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {serviciosConDatos.map((row) => (
+                <tr key={row.servicio}>
+                  <td className="border border-[#c3dadb] px-3 py-1.5 font-semibold text-slate-900">
+                    {row.servicio}
+                  </td>
+                  <td className="border border-[#c3dadb] px-3 py-1.5 text-slate-900">{row.titular || "—"}</td>
+                  <td className="border border-[#c3dadb] px-3 py-1.5 text-slate-900">{row.fecha || "—"}</td>
+                  <td className="border border-[#c3dadb] px-3 py-1.5 text-slate-900">
+                    {row.observaciones || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       <SectionBar>4. Observaciones generales</SectionBar>
       <p className="whitespace-pre-wrap text-sm text-slate-900">{data.observacionesGenerales || "—"}</p>
@@ -119,8 +130,8 @@ export function LegajoDocumentPreview({
         <tbody>
           {(Object.keys(CHECKLIST_LABELS) as (keyof typeof CHECKLIST_LABELS)[]).map((key) => (
             <tr key={key}>
-              <td className="border border-[#c8d3e6] px-3 py-2 text-slate-900">{CHECKLIST_LABELS[key]}</td>
-              <td className="w-16 border border-[#c8d3e6] px-3 py-2 text-center text-[#17284a]">
+              <td className="border border-[#c3dadb] px-3 py-2 text-slate-900">{CHECKLIST_LABELS[key]}</td>
+              <td className="w-16 border border-[#c3dadb] px-3 py-2 text-center text-[#1a5f6f]">
                 {data.checklist[key] ? "☑" : "☐"}
               </td>
             </tr>
@@ -156,7 +167,7 @@ function CategoryBlock({
         {index}. {title}
       </SectionBar>
       <p className="mb-3 text-sm text-slate-700">
-        <span className="font-semibold text-[#17284a]">Observaciones:</span>{" "}
+        <span className="font-semibold text-[#1a5f6f]">Observaciones:</span>{" "}
         {observaciones || "Sin observaciones"}
       </p>
 
