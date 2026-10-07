@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { LogoutIcon } from "@/components/layout/icons";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -23,9 +24,11 @@ export function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={loading}
-      className="rounded-md border border-white/40 px-3 py-1.5 text-sm text-white hover:bg-white/10 disabled:opacity-60"
+      aria-label="Cerrar sesión"
+      title="Cerrar sesión"
+      className="rounded-xl p-2 text-white/80 hover:bg-white/15 hover:text-white disabled:opacity-60"
     >
-      Cerrar sesión
+      <LogoutIcon />
     </button>
   );
 }

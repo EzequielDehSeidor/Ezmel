@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isMockMode } from "@/lib/supabase/env";
 import { decodeMockSession, MOCK_COOKIE_NAME } from "@/lib/mock/auth";
 
-const PUBLIC_PATHS = ["/login", "/logo.png", "/logo-white.png", "/prestamos.jpg"];
+const PUBLIC_PATHS = ["/login", "/logo.png", "/logo-white.png", "/logo-tagline.png", "/logo-tagline-white.png", "/prestamos.jpg"];
 
 function isPublicPath(pathname: string) {
   return (

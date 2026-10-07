@@ -3,6 +3,7 @@
 import { useFormContext } from "react-hook-form";
 import type { LegajoFormValues } from "@/lib/types/legajo";
 import { CurrencyInput } from "@/components/legajo/CurrencyInput";
+import { DateField } from "@/components/ui/DateField";
 
 function Field({
   label,
@@ -60,7 +61,7 @@ export function StepDatosPersonales() {
             <input className={inputClass} {...register("dni")} />
           </Field>
           <Field label="Fecha de Apertura del Legajo" error={errors.fechaApertura?.message}>
-            <input type="date" className={inputClass} {...register("fechaApertura")} />
+            <DateField name="fechaApertura" className={inputClass} />
           </Field>
         </div>
       </Section>
@@ -118,7 +119,7 @@ export function StepDatosPersonales() {
                     <input className={inputClass} {...register(`servicios.${i}.titular`)} />
                   </td>
                   <td className="py-2 pr-2">
-                    <input type="date" className={inputClass} {...register(`servicios.${i}.fecha`)} />
+                    <DateField name={`servicios.${i}.fecha`} className={inputClass} />
                   </td>
                   <td className="py-2">
                     <input className={inputClass} {...register(`servicios.${i}.observaciones`)} />

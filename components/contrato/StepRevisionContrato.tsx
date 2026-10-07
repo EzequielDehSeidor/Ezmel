@@ -6,20 +6,19 @@ import type { ContratoDatosSchema } from "@/lib/validation/contratoSchema";
 import type { ExportFormat } from "@/lib/types/legajo";
 
 const FORMAT_OPTIONS: { id: ExportFormat; label: string }[] = [
-  { id: "docx", label: "Word (.docx)" },
   { id: "pdf", label: "PDF (.pdf)" },
+  { id: "docx", label: "Word (.docx)" },
 ];
 
 interface Props {
   datos: ContratoDatosSchema;
-  savedId: string | null;
-  onSaved: (id: string) => void;
 }
 
-export function StepRevisionContrato({ datos, savedId, onSaved }: Props) {
-  const [formats, setFormats] = useState<ExportFormat[]>(["docx"]);
+export function StepRevisionContrato({ datos }: Props) {
+  const [formats, setFormats] = useState<ExportFormat[]>(["pdf"]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [descargado, setDescargado] = useState<string | null>(null);
 
   function toggleFormat(id: ExportFormat) {
     setFormats((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
@@ -43,9 +42,6 @@ export function StepRevisionContrato({ datos, savedId, onSaved }: Props) {
         throw new Error(body?.error ?? "No se pudo generar la descarga");
       }
 
-      const contratoId = res.headers.get("X-Contrato-Id");
-      if (contratoId) onSaved(contratoId);
-
       const disposition = res.headers.get("Content-Disposition") ?? "";
       const match = /filename="?([^"]+)"?/.exec(disposition);
       const filename = match?.[1] ?? "contrato";
@@ -59,6 +55,7 @@ export function StepRevisionContrato({ datos, savedId, onSaved }: Props) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      setDescargado(filename);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
     } finally {
@@ -91,8 +88,8 @@ export function StepRevisionContrato({ datos, savedId, onSaved }: Props) {
         </div>
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-        {savedId && !error && (
-          <p className="mt-3 text-sm text-emerald-600">Contrato guardado (ID {savedId}).</p>
+        {descargado && !error && (
+          <p className="mt-3 text-sm text-emerald-600">Guardado y descargado: {descargado}</p>
         )}
 
         <button

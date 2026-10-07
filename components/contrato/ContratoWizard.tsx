@@ -44,7 +44,6 @@ const CONTRATO_STEP1_FIELDS: (keyof ContratoDatosSchema)[] = [
 
 export function ContratoWizard() {
   const [step, setStep] = useState(0);
-  const [savedId, setSavedId] = useState<string | null>(null);
   const [datos, setDatos] = useState<ContratoDatosSchema | null>(null);
 
   const methods = useForm<ContratoDatosSchema>({
@@ -73,7 +72,7 @@ export function ContratoWizard() {
 
         {step === 0 && <StepFormularioContrato />}
         {step === 1 && datos && (
-          <StepRevisionContrato datos={datos} savedId={savedId} onSaved={setSavedId} />
+          <StepRevisionContrato datos={datos} />
         )}
 
         <div className="flex justify-between border-t border-slate-200 pt-4">

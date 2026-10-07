@@ -43,7 +43,7 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
     <div className={HOJA_CLASS} style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
       <div>
         <h1 className={TITULO_CLASS}>{c.titulo}</h1>
-        <Image src="/logo.png" alt="EzMel" width={1200} height={262} unoptimized className="mx-auto mt-5 h-12 w-auto" />
+        <Image src="/logo-tagline.png" alt="EzMel, servicios financieros" width={1200} height={436} unoptimized className="mx-auto mt-5 h-auto w-[220px]" />
 
         <p className="mt-6 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
           <Segments segments={c.intro} />
@@ -59,16 +59,16 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
         ))}
 
         <SectionBar>Firmas</SectionBar>
-        <div className="space-y-12">
+        <div className="space-y-12" style={{ marginTop: 40 }}>
           {c.firmas.map((f) => (
             <div key={f.rol} className="text-sm text-slate-800">
               <p className="font-semibold text-[#1a5f6f]">
                 {f.rol}: {LINEA_DNI}
               </p>
-              <p className="mt-10">
+              <p style={{ marginTop: 37 }}>
                 Nombre completo: <strong className={DATO_CLASS}>{f.nombre || LINEA_NOMBRE}</strong>
               </p>
-              <p className="mt-10">
+              <p style={{ marginTop: 37 }}>
                 DNI: <strong className={DATO_CLASS}>{f.documento || LINEA_DNI}</strong>
               </p>
             </div>
@@ -99,7 +99,7 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
           <Segments segments={c.pagare.ejecutivo} />
         </p>
 
-        <div className="mt-12 space-y-10 text-sm text-slate-800">
+        <div className="mt-12 flex flex-col text-sm text-slate-800" style={{ gap: 37 }}>
           <p className="font-semibold text-[#1a5f6f]">
             {c.pagare.firmanteLabel} {LINEA_NOMBRE}
           </p>

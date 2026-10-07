@@ -6,10 +6,11 @@ import { CHECKLIST_LABELS } from "@/lib/types/legajo";
 import type { ExportFormat, LegajoFileCategoryKey, LegajoFormValues } from "@/lib/types/legajo";
 import { LegajoDocumentPreview } from "@/components/legajo/LegajoDocumentPreview";
 import { prepareUpload } from "@/lib/export/prepareUpload";
+import { DateField } from "@/components/ui/DateField";
 
 const FORMAT_OPTIONS: { id: ExportFormat; label: string }[] = [
-  { id: "docx", label: "Word (.docx)" },
   { id: "pdf", label: "PDF (.pdf)" },
+  { id: "docx", label: "Word (.docx)" },
   { id: "xlsx", label: "Excel (.xlsx)" },
 ];
 
@@ -18,18 +19,17 @@ const inputClass =
 
 interface Props {
   files: Partial<Record<LegajoFileCategoryKey, File[]>>;
-  savedId: string | null;
-  onSaved: (id: string) => void;
   onEditar: () => void;
 }
 
-export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
+export function StepRevision({ files, onEditar }: Props) {
   const { register, watch } = useFormContext<LegajoFormValues>();
   const data = watch();
 
-  const [formats, setFormats] = useState<ExportFormat[]>(["docx"]);
+  const [formats, setFormats] = useState<ExportFormat[]>(["pdf"]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [descargado, setDescargado] = useState<string | null>(null);
 
   function toggleFormat(id: ExportFormat) {
     setFormats((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
@@ -73,9 +73,6 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
         throw new Error(body?.error ?? "No se pudo generar la descarga");
       }
 
-      const legajoId = res.headers.get("X-Legajo-Id");
-      if (legajoId) onSaved(legajoId);
-
       const disposition = res.headers.get("Content-Disposition") ?? "";
       const match = /filename="?([^"]+)"?/.exec(disposition);
       const filename = match?.[1] ?? "legajo";
@@ -89,6 +86,7 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
+      setDescargado(filename);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado");
     } finally {
@@ -142,7 +140,7 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
           </label>
           <label className="block">
             <span className="block text-sm font-semibold text-slate-900">Fecha</span>
-            <input type="date" className={inputClass} {...register("fechaResponsable")} />
+            <DateField name="fechaResponsable" className={inputClass} />
           </label>
         </div>
       </div>
@@ -167,8 +165,8 @@ export function StepRevision({ files, savedId, onSaved, onEditar }: Props) {
         </div>
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-        {savedId && !error && (
-          <p className="mt-3 text-sm text-emerald-600">Legajo guardado (ID {savedId}).</p>
+        {descargado && !error && (
+          <p className="mt-3 text-sm text-emerald-600">Guardado y descargado: {descargado}</p>
         )}
 
         <button

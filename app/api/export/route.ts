@@ -80,7 +80,12 @@ export async function POST(request: Request) {
   const session = await getServerSession();
   const record = await saveLegajo(parsedData.data, fileUploads, session?.email ?? null);
 
-  const baseName = `Legajo_${slugify(parsedData.data.nombreApellido || parsedData.data.dni || record.id)}`;
+  const baseName = `Legajo_${slugify(
+      parsedData.data.nombreApellido ||
+        `${parsedData.data.nombre} ${parsedData.data.apellido}`.trim() ||
+        parsedData.data.dni ||
+        record.id
+    )}`;
 
   const generators: Record<ExportFormat, () => Promise<Buffer>> = {
     docx: () => generateDocx(input),

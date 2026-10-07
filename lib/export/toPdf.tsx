@@ -1,8 +1,8 @@
 import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
-import { LOGO_ASPECT, LOGO_PNG } from "@/lib/brand/logo";
+import { LOGO_ASPECT, LOGO_PNG, LOGO_TAGLINE_ASPECT, LOGO_TAGLINE_PNG } from "@/lib/brand/logo";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
 import { formatCurrencyAR } from "@/lib/format/currency";
-import type { ExportFileData, ExportInput } from "./common";
+import { serviciosConDatos, type ExportFileData, type ExportInput } from "./common";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", color: "#1e293b" },
@@ -48,11 +48,20 @@ function Logo({ width }: { width: number }) {
   );
 }
 
-/** Logo en la esquina inferior derecha de cada hoja impresa. */
+/** Logo con el subtítulo "Servicios financieros" debajo, para el encabezado. */
+function LogoTagline({ width }: { width: number }) {
+  return (
+    // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML img
+    <Image src={{ data: LOGO_TAGLINE_PNG, format: "png" }} style={{ width, height: width / LOGO_TAGLINE_ASPECT }} />
+  );
+}
+
+/** Logo chico y subtítulo en la esquina inferior derecha de cada hoja impresa. */
 function LogoFooter() {
   return (
-    <View fixed style={{ position: "absolute", bottom: 8, right: 22 }}>
+    <View fixed style={{ position: "absolute", bottom: 8, right: 22, alignItems: "flex-end" }}>
       <Logo width={80} />
+      <Text style={{ marginTop: 2, fontSize: 5.5, letterSpacing: 1.2, color: "#1b4558" }}>SERVICIOS FINANCIEROS</Text>
     </View>
   );
 }
@@ -93,12 +102,10 @@ const PDF_IMAGE_FORMAT: Record<string, "png" | "jpg"> = {
  * primera imagen (no en una hoja aparte), y las siguientes van una por hoja.
  */
 function CategoryPages({
-  index,
   label,
   observaciones,
   images,
 }: {
-  index: number;
   label: string;
   observaciones: string;
   images: ExportFileData[];
@@ -107,22 +114,12 @@ function CategoryPages({
 
   const encabezado = (
     <>
-      <Text style={styles.heading}>
-        {index}. {label.toUpperCase()}
+      <Text style={styles.heading} minPresenceAhead={70}>
+        {label.toUpperCase()}
       </Text>
       <Text style={styles.subtitle}>Observaciones: {observaciones || "—"}</Text>
     </>
   );
-
-  if (usable.length === 0) {
-    return (
-      <Page size="A4" style={styles.page}>
-        {encabezado}
-        <Text>(sin archivos adjuntos)</Text>
-        <LogoFooter />
-      </Page>
-    );
-  }
 
   return (
     <>
@@ -148,22 +145,60 @@ function CategoryPages({
   );
 }
 
+interface CategoryInfo {
+  index: number;
+  label: string;
+  observaciones: string;
+  images: ExportFileData[];
+}
+
+/** Categorías sin archivos: bloques compactos que comparten hoja, en vez de una hoja cada una. */
+function EmptyBlocks({ items }: { items: CategoryInfo[] }) {
+  return (
+    <>
+      {items.map((c) => (
+        <View key={c.index} wrap={false}>
+          <Text style={styles.heading} minPresenceAhead={70}>
+            {c.label.toUpperCase()}
+          </Text>
+          <Text style={styles.subtitle}>Observaciones: {c.observaciones || "—"}</Text>
+          <Text>(sin archivos adjuntos)</Text>
+        </View>
+      ))}
+    </>
+  );
+}
+
 interface Props {
   data: ExportInput["data"];
   files: ExportInput["files"];
 }
 
 function LegajoPdfDocument({ data, files }: Props) {
+  const servicios = serviciosConDatos(data.servicios);
+  const categories: CategoryInfo[] = FILE_CATEGORIES.map((category, i) => ({
+    index: 5 + i,
+    label: category.label,
+    observaciones: data[category.obsKey],
+    images: files[category.key] ?? [],
+  }));
+
+  // Las categorías con archivos van cada una en sus hojas. Las vacías no ocupan hojas sueltas:
+  // van juntas en un bloque corto en la hoja final, sobre el checklist.
+  const tieneArchivos = (c: CategoryInfo) => c.images.some((image) => PDF_IMAGE_FORMAT[image.type]);
+  const conArchivos = categories.filter(tieneArchivos);
+  const sinArchivos = categories.filter((c) => !tieneArchivos(c));
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.bannerBar}>LEGAJO DE CLIENTE</Text>
         <View style={{ alignItems: "center", marginTop: 12 }}>
-          <Logo width={150} />
+          <LogoTagline width={150} />
         </View>
         <Text style={styles.subtitle}>Carpeta de documentación del cliente</Text>
 
-        <Text style={styles.heading}>DATOS GENERALES</Text>
+        <Text style={styles.heading} minPresenceAhead={70}>DATOS GENERALES</Text>
         <LabelValueTable
           rows={[
             ["Nombre y Apellido", data.nombreApellido],
@@ -173,7 +208,7 @@ function LegajoPdfDocument({ data, files }: Props) {
           ]}
         />
 
-        <Text style={styles.heading}>1. DATOS PERSONALES</Text>
+        <Text style={styles.heading} minPresenceAhead={70}>DATOS PERSONALES</Text>
         <LabelValueTable
           rows={[
             ["Nombre", data.nombre],
@@ -186,44 +221,48 @@ function LegajoPdfDocument({ data, files }: Props) {
           ]}
         />
 
-        <Text style={styles.heading}>2. MONTO DE PRÉSTAMO</Text>
+        <Text style={styles.heading} minPresenceAhead={70}>MONTO DE PRÉSTAMO</Text>
         <LabelValueTable rows={[["Monto de Préstamo", formatCurrencyAR(data.montoPrestamo)]]} />
 
-        <Text style={styles.heading}>3. SERVICIOS</Text>
-        <View style={styles.row}>
-          <Text style={[styles.tableHeaderCell, { width: "20%" }]}>Servicio</Text>
-          <Text style={[styles.tableHeaderCell, { width: "27%" }]}>Titular</Text>
-          <Text style={[styles.tableHeaderCell, { width: "18%" }]}>Fecha</Text>
-          <Text style={[styles.tableHeaderCell, { width: "35%" }]}>Observaciones</Text>
-        </View>
-        {data.servicios.map((row) => (
-          <View style={styles.row} key={row.servicio}>
-            <Text style={[styles.tableCell, { width: "20%" }]}>{row.servicio}</Text>
-            <Text style={[styles.tableCell, { width: "27%" }]}>{row.titular || "—"}</Text>
-            <Text style={[styles.tableCell, { width: "18%" }]}>{row.fecha || "—"}</Text>
-            <Text style={[styles.tableCell, { width: "35%" }]}>{row.observaciones || "—"}</Text>
-          </View>
-        ))}
+        {servicios.length > 0 && (
+          <>
+            <Text style={styles.heading} minPresenceAhead={70}>SERVICIOS</Text>
+            <View style={styles.row}>
+              <Text style={[styles.tableHeaderCell, { width: "20%" }]}>Servicio</Text>
+              <Text style={[styles.tableHeaderCell, { width: "27%" }]}>Titular</Text>
+              <Text style={[styles.tableHeaderCell, { width: "18%" }]}>Fecha</Text>
+              <Text style={[styles.tableHeaderCell, { width: "35%" }]}>Observaciones</Text>
+            </View>
+            {servicios.map((row) => (
+              <View style={styles.row} key={row.servicio}>
+                <Text style={[styles.tableCell, { width: "20%" }]}>{row.servicio}</Text>
+                <Text style={[styles.tableCell, { width: "27%" }]}>{row.titular || "—"}</Text>
+                <Text style={[styles.tableCell, { width: "18%" }]}>{row.fecha || "—"}</Text>
+                <Text style={[styles.tableCell, { width: "35%" }]}>{row.observaciones || "—"}</Text>
+              </View>
+            ))}
+          </>
+        )}
 
-        <Text style={styles.heading}>4. OBSERVACIONES GENERALES</Text>
+        <Text style={styles.heading} minPresenceAhead={70}>OBSERVACIONES GENERALES</Text>
         <Text>{data.observacionesGenerales || "—"}</Text>
         <LogoFooter />
       </Page>
 
-      {/* Documentación adjunta: cada categoría con su título, y cada archivo
+      {/* Documentación adjunta: cada categoría con archivos, con su título, y cada archivo
           (o página de PDF) a página completa. */}
-      {FILE_CATEGORIES.map((category, i) => (
+      {conArchivos.map((c) => (
         <CategoryPages
-          key={category.key}
-          index={5 + i}
-          label={category.label}
-          observaciones={data[category.obsKey]}
-          images={files[category.key] ?? []}
+          key={c.index}
+          label={c.label}
+          observaciones={c.observaciones}
+          images={c.images}
         />
       ))}
 
       <Page size="A4" style={styles.page}>
-        <Text style={styles.heading}>CHECKLIST FINAL</Text>
+        <EmptyBlocks items={sinArchivos} />
+        <Text style={styles.heading} minPresenceAhead={70}>CHECKLIST FINAL</Text>
         <LabelValueTable
           rows={(Object.keys(CHECKLIST_LABELS) as (keyof typeof CHECKLIST_LABELS)[]).map((key) => [
             CHECKLIST_LABELS[key],
@@ -231,7 +270,7 @@ function LegajoPdfDocument({ data, files }: Props) {
           ])}
         />
 
-        <Text style={styles.heading}>RESPONSABLE DEL LEGAJO</Text>
+        <Text style={styles.heading} minPresenceAhead={70}>RESPONSABLE DEL LEGAJO</Text>
         <LabelValueTable
           rows={[
             ["Responsable", data.responsable],

@@ -16,9 +16,11 @@ function Row({ label, value }: { label: string; value: string | number }) {
 }
 
 /** Barra de sección azul marino, igual a la plantilla Word del legajo. */
-function SectionBar({ children }: { children: React.ReactNode }) {
+function SectionBar({ children, tight = false }: { children: React.ReactNode; tight?: boolean }) {
   return (
-    <h3 className="mb-3 mt-8 bg-[#1a5f6f] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white">
+    <h3
+      className={`mb-3 ${tight ? "mt-4" : "mt-8"} bg-[#1a5f6f] px-4 py-2 text-sm font-bold uppercase tracking-wide text-white`}
+    >
       {children}
     </h3>
   );
@@ -40,14 +42,14 @@ export function LegajoDocumentPreview({
       <div className="bg-[#1a5f6f] px-4 py-2 text-center text-sm font-bold uppercase tracking-[0.2em] text-white">
         Legajo de Cliente
       </div>
-      <h1 className="mb-1 mt-5">
-        <Image src="/logo.png" alt="EzMel" width={1200} height={262} unoptimized className="mx-auto h-12 w-auto" />
+      <h1 className="mt-3">
+        <Image src="/logo-tagline.png" alt="EzMel, servicios financieros" width={1200} height={436} unoptimized className="mx-auto h-auto w-[220px]" />
       </h1>
-      <p className="mb-2 text-center text-sm italic text-slate-600">
+      <p className="text-center text-sm italic text-slate-600">
         Carpeta de documentación del cliente
       </p>
 
-      <SectionBar>Datos generales</SectionBar>
+      <SectionBar tight>Datos generales</SectionBar>
       <table className="w-full border-collapse text-sm">
         <tbody>
           <Row label="Nombre y Apellido" value={data.nombreApellido} />
@@ -57,7 +59,7 @@ export function LegajoDocumentPreview({
         </tbody>
       </table>
 
-      <SectionBar>1. Datos personales</SectionBar>
+      <SectionBar>Datos personales</SectionBar>
       <table className="w-full border-collapse text-sm">
         <tbody>
           <Row label="Nombre" value={data.nombre} />
@@ -70,7 +72,7 @@ export function LegajoDocumentPreview({
         </tbody>
       </table>
 
-      <SectionBar>2. Monto de préstamo</SectionBar>
+      <SectionBar>Monto de préstamo</SectionBar>
       <table className="w-full border-collapse text-sm">
         <tbody>
           <Row label="Monto de Préstamo" value={formatCurrencyAR(data.montoPrestamo)} />
@@ -79,7 +81,7 @@ export function LegajoDocumentPreview({
 
       {serviciosConDatos.length > 0 && (
         <>
-          <SectionBar>3. Servicios</SectionBar>
+          <SectionBar>Servicios</SectionBar>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr>
@@ -111,14 +113,13 @@ export function LegajoDocumentPreview({
         </>
       )}
 
-      <SectionBar>4. Observaciones generales</SectionBar>
+      <SectionBar>Observaciones generales</SectionBar>
       <p className="whitespace-pre-wrap text-sm text-slate-900">{data.observacionesGenerales || "—"}</p>
 
       {/* Documentación adjunta: cada categoría con su título real. */}
-      {FILE_CATEGORIES.map((category, i) => (
+      {FILE_CATEGORIES.map((category) => (
         <CategoryBlock
           key={category.key}
-          index={5 + i}
           title={category.label}
           files={files[category.key] ?? []}
           observaciones={data[category.obsKey]}
@@ -151,12 +152,10 @@ export function LegajoDocumentPreview({
 }
 
 function CategoryBlock({
-  index,
   title,
   files,
   observaciones,
 }: {
-  index: number;
   title: string;
   files: File[];
   observaciones: string;
@@ -164,7 +163,7 @@ function CategoryBlock({
   return (
     <div>
       <SectionBar>
-        {index}. {title}
+        {title}
       </SectionBar>
       <p className="mb-3 text-sm text-slate-700">
         <span className="font-semibold text-[#1a5f6f]">Observaciones:</span>{" "}

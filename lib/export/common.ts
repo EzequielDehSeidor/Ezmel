@@ -18,6 +18,11 @@ export interface ExportInput {
   files: Partial<Record<LegajoFileCategoryKey, ExportFileData[]>>;
 }
 
+/** Servicios con algo cargado (titular, fecha u observaciones); el resto no se muestra. */
+export function serviciosConDatos(servicios: LegajoFormValues["servicios"]) {
+  return servicios.filter((s) => [s.titular, s.fecha, s.observaciones].some((v) => v?.trim()));
+}
+
 /** Metadatos que el cliente manda junto a cada archivo, en el mismo orden. */
 export interface AttachmentMeta {
   category: LegajoFileCategoryKey;

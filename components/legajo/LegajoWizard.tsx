@@ -53,7 +53,6 @@ const STEPS = ["Datos de la persona", "Documentación", "Revisión y descarga"];
 export function LegajoWizard() {
   const [step, setStep] = useState(0);
   const [files, setFiles] = useState<Partial<Record<LegajoFileCategoryKey, File[]>>>({});
-  const [savedId, setSavedId] = useState<string | null>(null);
 
   const methods = useForm<LegajoFormValues>({
     resolver: zodResolver(legajoFormSchema) as Resolver<LegajoFormValues>,
@@ -83,8 +82,6 @@ export function LegajoWizard() {
         {step === 2 && (
           <StepRevision
             files={files}
-            savedId={savedId}
-            onSaved={setSavedId}
             onEditar={() => setStep(0)}
           />
         )}

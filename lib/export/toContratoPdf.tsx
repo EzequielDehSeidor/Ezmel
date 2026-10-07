@@ -1,5 +1,5 @@
 import { Document, Page, View, Text, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
-import { LOGO_ASPECT, LOGO_PNG } from "@/lib/brand/logo";
+import { LOGO_ASPECT, LOGO_PNG, LOGO_TAGLINE_ASPECT, LOGO_TAGLINE_PNG } from "@/lib/brand/logo";
 import {
   buildContratoContenido,
   LINEA_DNI,
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
   },
   body: { textAlign: "justify", marginBottom: 6 },
   firmaBlock: { marginTop: 10 },
-  firmaCampo: { marginTop: 24 },
+  firmaCampo: { marginTop: 22 },
   firmaLabel: { fontWeight: 700, color: "#1a5f6f" },
 });
 
@@ -41,11 +41,20 @@ function Logo({ width }: { width: number }) {
   );
 }
 
-/** Logo en la esquina inferior derecha de cada hoja impresa. */
+/** Logo con el subtítulo "Servicios financieros" debajo, para el encabezado. */
+function LogoTagline({ width }: { width: number }) {
+  return (
+    // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML img
+    <Image src={{ data: LOGO_TAGLINE_PNG, format: "png" }} style={{ width, height: width / LOGO_TAGLINE_ASPECT }} />
+  );
+}
+
+/** Logo chico y subtítulo en la esquina inferior derecha de cada hoja impresa. */
 function LogoFooter() {
   return (
-    <View fixed style={{ position: "absolute", bottom: 8, right: 22 }}>
+    <View fixed style={{ position: "absolute", bottom: 8, right: 22, alignItems: "flex-end" }}>
       <Logo width={80} />
+      <Text style={{ marginTop: 2, fontSize: 5.5, letterSpacing: 1.2, color: "#1b4558" }}>SERVICIOS FINANCIEROS</Text>
     </View>
   );
 }
@@ -73,14 +82,14 @@ export function ContratoPdfDocument({ datos }: { datos: ContratoDatos }) {
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>{c.titulo}</Text>
         <View style={{ alignItems: "center", marginBottom: 12 }}>
-          <Logo width={150} />
+          <LogoTagline width={150} />
         </View>
         <Text style={styles.body}>
           <Segments segments={c.intro} />
         </Text>
 
         {c.clausulas.map((cl) => (
-          <View key={cl.titulo}>
+          <View key={cl.titulo} wrap={false}>
             <Text style={styles.heading}>{cl.titulo}</Text>
             <Text style={styles.body}>
               <Segments segments={cl.texto} />
@@ -90,8 +99,8 @@ export function ContratoPdfDocument({ datos }: { datos: ContratoDatos }) {
 
         <View wrap={false}>
           <Text style={styles.heading}>FIRMAS</Text>
-          {c.firmas.map((f) => (
-            <View key={f.rol} style={[styles.firmaBlock, { marginBottom: 14 }]}>
+          {c.firmas.map((f, i) => (
+            <View key={f.rol} style={[styles.firmaBlock, { marginTop: i === 0 ? 28 : 10, marginBottom: 24 }]}>
               <Text style={styles.firmaLabel}>{f.rol}: {LINEA_DNI}</Text>
               <Text style={styles.firmaCampo}>
                 Nombre completo: <Text style={datoStyle}>{f.nombre || LINEA_NOMBRE}</Text>

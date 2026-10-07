@@ -2,6 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 import type { ContratoDatosSchema } from "@/lib/validation/contratoSchema";
+import { DateField, formatDMY } from "@/components/ui/DateField";
 
 function Field({
   label,
@@ -119,7 +120,7 @@ export function StepFormularioContrato() {
             <input type="text" inputMode="decimal" placeholder="0" className={inputClass} {...register("importeCuota")} />
           </Field>
           <Field label="Fecha de inicio" error={errors.fechaPrimeraCuota?.message}>
-            <input type="date" className={inputClass} {...register("fechaPrimeraCuota")} />
+            <DateField name="fechaPrimeraCuota" className={inputClass} />
           </Field>
           <Field label="Días hábiles para pagar cada cuota" error={errors.diasHabilesPago?.message}>
             <input type="number" step="1" min="1" className={inputClass} {...register("diasHabilesPago")} />
@@ -130,7 +131,7 @@ export function StepFormularioContrato() {
       <Section title="Décima tercera – Domicilios">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Fecha de contrato" error={errors.fechaContrato?.message}>
-            <input type="date" className={inputClass} {...register("fechaContrato")} />
+            <DateField name="fechaContrato" className={inputClass} />
           </Field>
         </div>
       </Section>
@@ -141,10 +142,10 @@ export function StepFormularioContrato() {
             <input readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
           </Field>
           <Field label="Vence el día" error={errors.fechaVencimientoPagare?.message}>
-            <input type="date" className={inputClass} {...register("fechaVencimientoPagare")} />
+            <DateField name="fechaVencimientoPagare" className={inputClass} />
           </Field>
           <Field label="Fecha de contrato">
-            <input readOnly tabIndex={-1} className={readOnlyInputClass} value={fechaContrato || ""} />
+            <input readOnly tabIndex={-1} className={readOnlyInputClass} value={formatDMY(fechaContrato)} />
           </Field>
           <Field label="Suma total ($)">
             <input readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />

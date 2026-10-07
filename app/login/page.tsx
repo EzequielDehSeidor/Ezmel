@@ -22,7 +22,7 @@ export default async function LoginPage() {
             <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[#6ACEC6]/15" />
 
             <div className="relative">
-              <Image src="/logo-white.png" alt="EzMel" width={1200} height={262} priority unoptimized className="h-10 w-auto" />
+              <Image src="/logo-tagline-white.png" alt="EzMel, servicios financieros" width={1200} height={436} priority unoptimized className="h-auto w-52" />
               <div aria-hidden className="mt-6 h-1 w-14 rounded-full bg-[#6ACEC6]" />
               <h2 className="mt-6 text-3xl font-bold leading-tight md:text-4xl">
                 Gestioná tus legajos y contratos de forma simple

@@ -12,10 +12,10 @@ import {
   AlignmentType,
   Footer,
 } from "docx";
-import { LOGO_ASPECT, LOGO_PNG } from "@/lib/brand/logo";
+import { LOGO_ASPECT, LOGO_PNG, LOGO_TAGLINE_ASPECT, LOGO_TAGLINE_PNG } from "@/lib/brand/logo";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
 import { formatCurrencyAR } from "@/lib/format/currency";
-import type { ExportFileData, ExportInput } from "./common";
+import { serviciosConDatos, type ExportFileData, type ExportInput } from "./common";
 
 const LABEL_WIDTH = 3300;
 const VALUE_WIDTH = 6780;
@@ -66,6 +66,7 @@ function heading(text: string) {
             margins: { top: 80, bottom: 80, left: 120, right: 120 },
             children: [
               new Paragraph({
+                keepNext: true,
                 children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 22, color: "FFFFFF" })],
               }),
             ],
@@ -78,6 +79,15 @@ function heading(text: string) {
 
 function spacer() {
   return new Paragraph({ spacing: { before: 200, after: 60 }, children: [] });
+}
+
+/** Logo con el subtítulo "Servicios financieros" debajo, para el encabezado. */
+function logoTaglineRun(widthPx: number) {
+  return new ImageRun({
+    type: "png",
+    data: LOGO_TAGLINE_PNG,
+    transformation: { width: widthPx, height: Math.round(widthPx / LOGO_TAGLINE_ASPECT) },
+  });
 }
 
 function logoRun(widthPx: number) {
@@ -101,31 +111,41 @@ const DOCX_IMAGE_TYPE: Record<string, "png" | "jpg" | "gif" | "bmp"> = {
   "image/bmp": "bmp",
 };
 
+const usablesDe = (images: ExportFileData[] | undefined) =>
+  (images ?? []).filter((image) => DOCX_IMAGE_TYPE[image.type]);
+
+function observacionesParagraph(observaciones: string) {
+  return new Paragraph({
+    spacing: { before: 100, after: 100 },
+    children: [new TextRun({ text: `Observaciones: ${observaciones || "—"}`, italics: true, size: 20 })],
+  });
+}
+
+/** Categoría sin archivos: un bloque corto (título, observaciones y aviso), sin hoja propia. */
+function emptyCategoryBlocks(title: string, observaciones: string): (Paragraph | Table)[] {
+  return [
+    spacer(),
+    heading(title),
+    observacionesParagraph(observaciones),
+    new Paragraph({ children: [new TextRun({ text: "(sin archivos adjuntos)", italics: true })] }),
+  ];
+}
+
 /**
- * Cada categoría arranca en página nueva, con su título y observaciones
- * arriba y la primera imagen debajo (no en una hoja aparte). Las imágenes
- * siguientes sí van una por página, a tamaño grande.
+ * Cada categoría con archivos arranca en página nueva, con su título y
+ * observaciones arriba y la primera imagen debajo (no en una hoja aparte).
+ * Las imágenes siguientes sí van una por página, a tamaño grande.
  */
 function categoryBlocks(
-  index: number,
   title: string,
-  images: ExportFileData[] | undefined,
+  usables: ExportFileData[],
   observaciones: string
 ): (Paragraph | Table)[] {
   const blocks: (Paragraph | Table)[] = [
     new Paragraph({ pageBreakBefore: true, children: [] }),
-    heading(`${index}. ${title}`),
-    new Paragraph({
-      spacing: { before: 100, after: 100 },
-      children: [new TextRun({ text: `Observaciones: ${observaciones || "—"}`, italics: true, size: 20 })],
-    }),
+    heading(title),
+    observacionesParagraph(observaciones),
   ];
-
-  const usables = (images ?? []).filter((image) => DOCX_IMAGE_TYPE[image.type]);
-  if (usables.length === 0) {
-    blocks.push(new Paragraph({ children: [new TextRun({ text: "(sin archivos adjuntos)", italics: true })] }));
-    return blocks;
-  }
 
   usables.forEach((image, i) => {
     // La primera comparte página con el título; el resto, una por hoja.
@@ -155,17 +175,58 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
   const { data, files } = input;
 
   // La documentación adjunta va después de los datos, numerada a continuación
-  // de "4. Observaciones generales" (5, 6, 7, 8...).
-  const attachmentBlocks = FILE_CATEGORIES.flatMap((category, i) =>
-    categoryBlocks(5 + i, category.label, files[category.key], data[category.obsKey])
+  // de "Observaciones generales". Las categorías sin archivos
+  // no ocupan hojas sueltas: van juntas en un bloque corto.
+  const categorias = FILE_CATEGORIES.map((category, i) => ({
+    index: 5 + i,
+    label: category.label,
+    observaciones: data[category.obsKey],
+    usables: usablesDe(files[category.key]),
+  }));
+  const conArchivos = categorias.filter((c) => c.usables.length > 0);
+  const sinArchivos = categorias.flatMap((c) =>
+    c.usables.length === 0 ? emptyCategoryBlocks(c.label, c.observaciones) : []
   );
+  const attachmentBlocks = conArchivos.flatMap((c) => categoryBlocks(c.label, c.usables, c.observaciones));
+
+  // Solo los servicios cargados; si no hay ninguno, no se muestra la sección.
+  const servicios = serviciosConDatos(data.servicios);
+  const serviciosBlocks: (Paragraph | Table)[] =
+    servicios.length === 0
+      ? []
+      : [
+          spacer(),
+          heading("Servicios"),
+          new Table({
+            width: { size: TABLE_WIDTH, type: WidthType.DXA },
+            columnWidths: [2000, 2900, 1800, 3380],
+            rows: [
+              new TableRow({
+                children: ["Servicio", "Titular", "Fecha", "Observaciones"].map((h, i) =>
+                  cellText(h, { width: [2000, 2900, 1800, 3380][i], bold: true, shaded: true })
+                ),
+              }),
+              ...servicios.map(
+                (row) =>
+                  new TableRow({
+                    children: [
+                      cellText(row.servicio, { width: 2000, bold: true }),
+                      cellText(row.titular, { width: 2900 }),
+                      cellText(row.fecha, { width: 1800 }),
+                      cellText(row.observaciones, { width: 3380 }),
+                    ],
+                  })
+              ),
+            ],
+          }),
+        ];
 
   const children: (Paragraph | Table)[] = [
     heading("Legajo de Cliente"),
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { before: 200 },
-      children: [logoRun(200)],
+      children: [logoTaglineRun(200)],
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
@@ -184,7 +245,7 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
     ]),
 
     spacer(),
-    heading("1. Datos personales"),
+    heading("Datos personales"),
     labelValueTable([
       ["Nombre", data.nombre],
       ["Apellido", data.apellido],
@@ -196,36 +257,13 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
     ]),
 
     spacer(),
-    heading("2. Monto de préstamo"),
+    heading("Monto de préstamo"),
     labelValueTable([["Monto de Préstamo", formatCurrencyAR(data.montoPrestamo)]]),
 
-    spacer(),
-    heading("3. Servicios"),
-    new Table({
-      width: { size: TABLE_WIDTH, type: WidthType.DXA },
-      columnWidths: [2000, 2900, 1800, 3380],
-      rows: [
-        new TableRow({
-          children: ["Servicio", "Titular", "Fecha", "Observaciones"].map((h, i) =>
-            cellText(h, { width: [2000, 2900, 1800, 3380][i], bold: true, shaded: true })
-          ),
-        }),
-        ...data.servicios.map(
-          (row) =>
-            new TableRow({
-              children: [
-                cellText(row.servicio, { width: 2000, bold: true }),
-                cellText(row.titular, { width: 2900 }),
-                cellText(row.fecha, { width: 1800 }),
-                cellText(row.observaciones, { width: 3380 }),
-              ],
-            })
-        ),
-      ],
-    }),
+    ...serviciosBlocks,
 
     spacer(),
-    heading("4. Observaciones generales"),
+    heading("Observaciones generales"),
     new Paragraph({ children: [new TextRun({ text: data.observacionesGenerales || "—" })] }),
 
     // Documentación adjunta (secciones 5 en adelante).
@@ -233,6 +271,8 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
 
     // Cierre del legajo en su propia hoja: checklist y, debajo, el responsable.
     new Paragraph({ pageBreakBefore: true, children: [] }),
+    ...sinArchivos,
+    ...(sinArchivos.length > 0 ? [spacer()] : []),
     heading("Checklist final"),
     new Table({
       width: { size: TABLE_WIDTH, type: WidthType.DXA },
@@ -262,7 +302,13 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
         properties: { page: { size: { width: 12240, height: 15840 } } },
         footers: {
           default: new Footer({
-            children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [logoRun(90)] })],
+            children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, children: [logoRun(90)] }),
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [new TextRun({ text: "SERVICIOS FINANCIEROS", size: 11, color: "1B4558", characterSpacing: 24 })],
+              }),
+            ],
           }),
         },
         children,

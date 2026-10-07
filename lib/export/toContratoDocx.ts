@@ -1,5 +1,5 @@
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, ImageRun, Footer } from "docx";
-import { LOGO_ASPECT, LOGO_PNG } from "@/lib/brand/logo";
+import { LOGO_ASPECT, LOGO_PNG, LOGO_TAGLINE_ASPECT, LOGO_TAGLINE_PNG } from "@/lib/brand/logo";
 import {
   buildContratoContenido,
   LINEA_DNI,
@@ -61,6 +61,15 @@ function titleBar(text: string) {
   });
 }
 
+/** Logo con el subtítulo "Servicios financieros" debajo, para el encabezado. */
+function logoTaglineRun(widthPx: number) {
+  return new ImageRun({
+    type: "png",
+    data: LOGO_TAGLINE_PNG,
+    transformation: { width: widthPx, height: Math.round(widthPx / LOGO_TAGLINE_ASPECT) },
+  });
+}
+
 function logoRun(widthPx: number) {
   return new ImageRun({
     type: "png",
@@ -97,7 +106,7 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
 
   const children: (Paragraph | Table)[] = [
     titleBar(c.titulo),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 160 }, children: [logoRun(200)] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 160 }, children: [logoTaglineRun(200)] }),
     spacer(),
     bodyText(c.intro),
   ];
@@ -112,12 +121,12 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
     children.push(
       new Paragraph({
         keepNext: true,
-        spacing: { before: 150 },
+        spacing: { before: i === 0 ? 550 : 150 },
         children: [new TextRun({ text: `${f.rol}: ${LINEA_DNI}`, bold: true, size: 20 })],
       }),
       new Paragraph({
         keepNext: true,
-        spacing: { before: 500 },
+        spacing: { before: 455 },
         children: [
           new TextRun({ text: "Nombre completo: ", size: 20 }),
           datoRun(f.nombre || LINEA_NOMBRE),
@@ -125,7 +134,7 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
       }),
       new Paragraph({
         keepNext: i < c.firmas.length - 1,
-        spacing: { before: 500, after: 400 },
+        spacing: { before: 455, after: 400 },
         children: [
           new TextRun({ text: "DNI: ", size: 20 }),
           datoRun(f.documento || LINEA_DNI),
@@ -154,25 +163,25 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
     bodyText(c.pagare.ejecutivo),
     spacer(),
     new Paragraph({
-      spacing: { before: 600 },
+      spacing: { before: 555 },
       children: [new TextRun({ text: `${c.pagare.firmanteLabel} ${LINEA_NOMBRE}`, bold: true, size: 20 })],
     }),
     new Paragraph({
-      spacing: { before: 600 },
+      spacing: { before: 555 },
       children: [
         new TextRun({ text: "Documento N.º: ", size: 20 }),
         datoRun(c.pagare.documento || LINEA_DNI),
       ],
     }),
     new Paragraph({
-      spacing: { before: 600 },
+      spacing: { before: 555 },
       children: [
         new TextRun({ text: "Domicilio: ", size: 20 }),
         datoRun(c.pagare.domicilio || LINEA_NOMBRE),
       ],
     }),
     new Paragraph({
-      spacing: { before: 600 },
+      spacing: { before: 555 },
       children: [new TextRun({ text: `Firma: ${LINEA_DNI}`, size: 20 })],
     })
   );
@@ -184,7 +193,13 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
         properties: { page: { size: { width: PAGE_WIDTH, height: 15840 } } },
         footers: {
           default: new Footer({
-            children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [logoRun(90)] })],
+            children: [
+              new Paragraph({ alignment: AlignmentType.RIGHT, children: [logoRun(90)] }),
+              new Paragraph({
+                alignment: AlignmentType.RIGHT,
+                children: [new TextRun({ text: "SERVICIOS FINANCIEROS", size: 11, color: "1B4558", characterSpacing: 24 })],
+              }),
+            ],
           }),
         },
         children,
