@@ -10,14 +10,16 @@ import { StepRevisionContrato } from "./StepRevisionContrato";
 
 // Los montos arrancan vacíos (se muestran con placeholder) para poder escribir sin borrar un "0".
 const defaultValues: DefaultValues<ContratoDatosSchema> = {
+  numeroContrato: "",
   mutuarioNombre: "",
   mutuarioDni: "",
   mutuarioDomicilio: "",
   mutuarioEmail: "",
+  mutuarioCbu: "",
+  mutuarioAlias: "",
   cantidadCuotas: 1,
   periodicidadPago: "mensual",
   fechaPrimeraCuota: "",
-  diasHabilesPago: 10,
   fechaContrato: "",
   fechaVencimientoPagare: "",
   garanteNombre: "",
@@ -27,17 +29,23 @@ const defaultValues: DefaultValues<ContratoDatosSchema> = {
 const STEPS = ["Datos del contrato", "Contrato final"];
 
 const CONTRATO_STEP1_FIELDS: (keyof ContratoDatosSchema)[] = [
+  "numeroContrato",
   "mutuarioNombre",
   "mutuarioDni",
   "mutuarioDomicilio",
   "mutuarioEmail",
+  "mutuarioCbu",
+  "mutuarioAlias",
   "montoPrestado",
   "montoADevolver",
   "cantidadCuotas",
   "importeCuota",
   "periodicidadPago",
   "fechaPrimeraCuota",
-  "diasHabilesPago",
+  "tna",
+  "tem",
+  "tea",
+  "cftea",
   "fechaContrato",
   "fechaVencimientoPagare",
 ];

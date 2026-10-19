@@ -297,6 +297,7 @@ export async function generateDocx(input: ExportInput): Promise<Buffer> {
   ];
 
   const doc = new Document({
+    styles: { default: { document: { run: { font: "Arial" } } } },
     sections: [
       {
         properties: { page: { size: { width: 12240, height: 15840 } } },

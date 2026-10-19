@@ -8,7 +8,7 @@ import {
 } from "@/lib/contrato/buildContratoBlocks";
 import type { ContratoDatos } from "@/lib/types/contrato";
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: "Helvetica", color: "#1e293b", lineHeight: 1.4 },
   title: {
     fontSize: 16,
@@ -42,7 +42,7 @@ function Logo({ width }: { width: number }) {
 }
 
 /** Logo con el subtítulo "Servicios financieros" debajo, para el encabezado. */
-function LogoTagline({ width }: { width: number }) {
+export function LogoTagline({ width }: { width: number }) {
   return (
     // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf/renderer's Image is not an HTML img
     <Image src={{ data: LOGO_TAGLINE_PNG, format: "png" }} style={{ width, height: width / LOGO_TAGLINE_ASPECT }} />
@@ -50,7 +50,7 @@ function LogoTagline({ width }: { width: number }) {
 }
 
 /** Logo chico y subtítulo en la esquina inferior derecha de cada hoja impresa. */
-function LogoFooter() {
+export function LogoFooter() {
   return (
     <View fixed style={{ position: "absolute", bottom: 8, right: 22, alignItems: "flex-end" }}>
       <Logo width={80} />
@@ -60,7 +60,7 @@ function LogoFooter() {
 }
 
 /** Datos completados: negro puro y un punto más grandes que el texto fijo. */
-const datoStyle = { fontWeight: 700, fontSize: 11, color: "#000000" } as const;
+export const datoStyle = { fontWeight: 700, fontSize: 11, color: "#000000" } as const;
 
 function Segments({ segments }: { segments: TextSegment[] }) {
   return (
@@ -85,6 +85,9 @@ export function ContratoPdfDocument({ datos }: { datos: ContratoDatos }) {
           <LogoTagline width={150} />
         </View>
         <Text style={styles.body}>
+          <Segments segments={c.numero} />
+        </Text>
+        <Text style={styles.body}>
           <Segments segments={c.intro} />
         </Text>
 
@@ -96,6 +99,10 @@ export function ContratoPdfDocument({ datos }: { datos: ContratoDatos }) {
             </Text>
           </View>
         ))}
+
+        <Text style={[styles.body, { marginTop: 8 }]}>
+          <Segments segments={c.cierre} />
+        </Text>
 
         <View wrap={false}>
           <Text style={styles.heading}>FIRMAS</Text>
@@ -116,26 +123,22 @@ export function ContratoPdfDocument({ datos }: { datos: ContratoDatos }) {
 
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>{c.pagare.titulo}</Text>
+        <Text style={[styles.body, { textAlign: "center" }]}>{c.pagare.subtitulo}</Text>
         <Text style={styles.body}>
-          <Text style={{ fontWeight: 700 }}>Por: </Text>
+          <Segments segments={c.pagare.encabezado} />
+        </Text>
+        <Text style={styles.body}>
           <Segments segments={c.pagare.por} />
-        </Text>
-        <Text style={styles.body}>
-          <Text style={{ fontWeight: 700 }}>Vence el día: </Text>
-          <Text style={datoStyle}>{c.pagare.vence}</Text>
-        </Text>
-        <Text style={styles.body}>
-          <Segments segments={c.pagare.lugar} />
         </Text>
 
         <Text style={styles.body}>
           <Segments segments={c.pagare.cuerpo} />
         </Text>
         <Text style={styles.body}>
-          <Segments segments={c.pagare.interes} />
+          <Segments segments={c.pagare.valor} />
         </Text>
         <Text style={styles.body}>
-          <Segments segments={c.pagare.ejecutivo} />
+          <Segments segments={c.pagare.lugarFecha} />
         </Text>
 
         <View style={{ marginTop: 20 }} wrap={false}>
@@ -143,12 +146,14 @@ export function ContratoPdfDocument({ datos }: { datos: ContratoDatos }) {
             {c.pagare.firmanteLabel} {LINEA_NOMBRE}
           </Text>
           <Text style={styles.firmaCampo}>
-            Documento N.º: <Text style={datoStyle}>{c.pagare.documento || LINEA_DNI}</Text>
+            Nombre y apellido: <Text style={datoStyle}>{c.pagare.nombre || LINEA_NOMBRE}</Text>
+          </Text>
+          <Text style={styles.firmaCampo}>
+            DNI N°: <Text style={datoStyle}>{c.pagare.documento || LINEA_DNI}</Text>
           </Text>
           <Text style={styles.firmaCampo}>
             Domicilio: <Text style={datoStyle}>{c.pagare.domicilio || LINEA_NOMBRE}</Text>
           </Text>
-          <Text style={styles.firmaCampo}>Firma: {LINEA_DNI}</Text>
         </View>
         <LogoFooter />
       </Page>

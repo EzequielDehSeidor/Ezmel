@@ -1,10 +1,5 @@
-import { ContratoWizard } from "@/components/contrato/ContratoWizard";
+import { ContratosPanel } from "@/components/contrato/ContratosPanel";
 
 export default function ContratosPage() {
-  return (
-    <>
-      <h1 className="mb-6 text-2xl font-bold text-brand">Crear contrato</h1>
-      <ContratoWizard />
-    </>
-  );
+  return <ContratosPanel />;
 }

@@ -8,7 +8,7 @@ import {
 } from "@/lib/contrato/buildContratoBlocks";
 import type { ContratoDatos } from "@/lib/types/contrato";
 
-const PAGE_WIDTH = 12240;
+export const PAGE_WIDTH = 12240;
 const CONTENT_WIDTH = PAGE_WIDTH - 2 * 1440;
 
 /** Barra de sección azul marino con texto blanco, igual al estilo de la página. */
@@ -37,7 +37,7 @@ function heading(text: string) {
 }
 
 /** Título principal (CONTRATO DE MUTUO / PAGARÉ): barra azul marino centrada con texto blanco. */
-function titleBar(text: string) {
+export function titleBar(text: string) {
   return new Table({
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
     columnWidths: [CONTENT_WIDTH],
@@ -62,7 +62,7 @@ function titleBar(text: string) {
 }
 
 /** Logo con el subtítulo "Servicios financieros" debajo, para el encabezado. */
-function logoTaglineRun(widthPx: number) {
+export function logoTaglineRun(widthPx: number) {
   return new ImageRun({
     type: "png",
     data: LOGO_TAGLINE_PNG,
@@ -70,7 +70,7 @@ function logoTaglineRun(widthPx: number) {
   });
 }
 
-function logoRun(widthPx: number) {
+export function logoRun(widthPx: number) {
   return new ImageRun({
     type: "png",
     data: LOGO_PNG,
@@ -78,19 +78,26 @@ function logoRun(widthPx: number) {
   });
 }
 
-function spacer() {
+export function spacer() {
   return new Paragraph({ spacing: { before: 150, after: 60 }, children: [] });
 }
 
 const DATO_SIZE = 22;
 
 /** Datos completados: negro puro y un punto más grandes que el texto fijo. */
-function datoRun(text: string) {
-  return new TextRun({ text, bold: true, size: DATO_SIZE, color: "000000" });
+export function datoRun(text: string, saltoAntes = false) {
+  return new TextRun({ text, bold: true, size: DATO_SIZE, color: "000000", break: saltoAntes ? 1 : undefined });
 }
 
+/** Los saltos de línea del texto pasan a saltos de línea del Word. */
 function segmentsToRuns(segments: TextSegment[], size = 20): TextRun[] {
-  return segments.map((s) => (s.bold ? datoRun(s.text) : new TextRun({ text: s.text, size })));
+  return segments.flatMap((s) =>
+    s.text
+      .split("\n")
+      .map((parte, i) =>
+        s.bold ? datoRun(parte, i > 0) : new TextRun({ text: parte, size, break: i > 0 ? 1 : undefined })
+      )
+  );
 }
 
 function bodyText(segments: TextSegment[]) {
@@ -108,6 +115,7 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
     titleBar(c.titulo),
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 160 }, children: [logoTaglineRun(200)] }),
     spacer(),
+    new Paragraph({ spacing: { after: 100 }, children: segmentsToRuns(c.numero) }),
     bodyText(c.intro),
   ];
 
@@ -115,7 +123,7 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
     children.push(spacer(), heading(clausula.titulo), spacer(), bodyText(clausula.texto));
   }
 
-  children.push(spacer(), heading("Firmas"));
+  children.push(spacer(), bodyText(c.cierre), spacer(), heading("Firmas"));
   // keepNext encadena todo el bloque de firmas para que no se parta entre hojas.
   for (const [i, f] of c.firmas.entries()) {
     children.push(
@@ -147,20 +155,16 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
   children.push(
     new Paragraph({ pageBreakBefore: true, children: [] }),
     titleBar(c.pagare.titulo),
-    spacer(),
     new Paragraph({
-      children: [new TextRun({ text: "Por: ", bold: true, size: 20 }), ...segmentsToRuns(c.pagare.por)],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 60, after: 120 },
+      children: [new TextRun({ text: c.pagare.subtitulo, size: 20 })],
     }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Vence el día: ", bold: true, size: 20 }),
-        datoRun(c.pagare.vence),
-      ],
-    }),
-    new Paragraph({ spacing: { after: 150 }, children: segmentsToRuns(c.pagare.lugar) }),
+    new Paragraph({ spacing: { after: 80 }, children: segmentsToRuns(c.pagare.encabezado) }),
+    new Paragraph({ spacing: { after: 150 }, children: segmentsToRuns(c.pagare.por) }),
     bodyText(c.pagare.cuerpo),
-    bodyText(c.pagare.interes),
-    bodyText(c.pagare.ejecutivo),
+    bodyText(c.pagare.valor),
+    bodyText(c.pagare.lugarFecha),
     spacer(),
     new Paragraph({
       spacing: { before: 555 },
@@ -168,21 +172,15 @@ export async function generateContratoDocx(datos: ContratoDatos): Promise<Buffer
     }),
     new Paragraph({
       spacing: { before: 555 },
-      children: [
-        new TextRun({ text: "Documento N.º: ", size: 20 }),
-        datoRun(c.pagare.documento || LINEA_DNI),
-      ],
+      children: [new TextRun({ text: "Nombre y apellido: ", size: 20 }), datoRun(c.pagare.nombre || LINEA_NOMBRE)],
     }),
     new Paragraph({
       spacing: { before: 555 },
-      children: [
-        new TextRun({ text: "Domicilio: ", size: 20 }),
-        datoRun(c.pagare.domicilio || LINEA_NOMBRE),
-      ],
+      children: [new TextRun({ text: "DNI N°: ", size: 20 }), datoRun(c.pagare.documento || LINEA_DNI)],
     }),
     new Paragraph({
       spacing: { before: 555 },
-      children: [new TextRun({ text: `Firma: ${LINEA_DNI}`, size: 20 })],
+      children: [new TextRun({ text: "Domicilio: ", size: 20 }), datoRun(c.pagare.domicilio || LINEA_NOMBRE)],
     })
   );
 

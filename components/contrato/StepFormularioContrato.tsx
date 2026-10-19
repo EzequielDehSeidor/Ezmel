@@ -3,6 +3,9 @@
 import { useFormContext } from "react-hook-form";
 import type { ContratoDatosSchema } from "@/lib/validation/contratoSchema";
 import { DateField, formatDMY } from "@/components/ui/DateField";
+import { desglosarIntereses } from "@/lib/contrato/buildContratoBlocks";
+import { parseMontoAR } from "@/lib/format/montoAR";
+import { formatDni, formatDomicilio } from "@/lib/format/personal";
 
 function Field({
   label,
@@ -39,6 +42,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+const pesos = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 const PERIODICIDAD_OPTIONS: { id: "mensual" | "quincenal" | "semanal"; label: string }[] = [
   { id: "mensual", label: "Mensual" },
   { id: "quincenal", label: "Quincenal" },
@@ -56,6 +61,15 @@ export function StepFormularioContrato() {
   const montoADevolver = watch("montoADevolver");
   const fechaContrato = watch("fechaContrato");
   const periodicidadPago = watch("periodicidadPago");
+  const numeroContrato = watch("numeroContrato");
+
+  // Lo que excede el capital son intereses más IVA (21%), así que se calculan solos.
+  const prestado = parseMontoAR(watch("montoPrestado"));
+  const total = parseMontoAR(montoADevolver);
+  const cuota = parseMontoAR(watch("importeCuota"));
+  const cuotas = Number(watch("cantidadCuotas")) || 0;
+  const desglose = prestado && total ? desglosarIntereses(prestado, total) : null;
+  const cuotasNoCierran = !!(total && cuota && cuotas > 0 && Math.abs(cuota * cuotas - total) > 0.05 * cuotas);
 
   return (
     <div className="space-y-5">
@@ -65,13 +79,33 @@ export function StepFormularioContrato() {
             <input className={inputClass} {...register("mutuarioNombre")} />
           </Field>
           <Field label="DNI" error={errors.mutuarioDni?.message}>
-            <input className={inputClass} {...register("mutuarioDni")} />
+            <input
+              inputMode="numeric"
+              className={inputClass}
+              {...register("mutuarioDni", { onBlur: (e) => setValue("mutuarioDni", formatDni(e.target.value)) })}
+            />
           </Field>
           <Field label="Domicilio" error={errors.mutuarioDomicilio?.message}>
-            <input className={inputClass} {...register("mutuarioDomicilio")} />
+            <input
+              className={inputClass}
+              {...register("mutuarioDomicilio", {
+                onBlur: (e) => setValue("mutuarioDomicilio", formatDomicilio(e.target.value)),
+              })}
+            />
           </Field>
           <Field label="Email" error={errors.mutuarioEmail?.message}>
             <input type="email" className={inputClass} {...register("mutuarioEmail")} />
+          </Field>
+          <Field label="CBU del mutuario" error={errors.mutuarioCbu?.message}>
+            <input
+              inputMode="numeric"
+              className={inputClass}
+              placeholder="0000003100012345678901"
+              {...register("mutuarioCbu")}
+            />
+          </Field>
+          <Field label="Alias del mutuario" error={errors.mutuarioAlias?.message}>
+            <input className={inputClass} placeholder="JUAN.EJEMPLO" {...register("mutuarioAlias")} />
           </Field>
         </div>
       </Section>
@@ -122,14 +156,55 @@ export function StepFormularioContrato() {
           <Field label="Fecha de inicio" error={errors.fechaPrimeraCuota?.message}>
             <DateField name="fechaPrimeraCuota" className={inputClass} />
           </Field>
-          <Field label="Días hábiles para pagar cada cuota" error={errors.diasHabilesPago?.message}>
-            <input type="number" step="1" min="1" className={inputClass} {...register("diasHabilesPago")} />
-          </Field>
         </div>
+        {cuotasNoCierran && (
+          <p className="mt-3 text-sm text-amber-700">
+            El importe por cuota por la cantidad de cuotas no coincide con la suma total: revisá los montos.
+          </p>
+        )}
       </Section>
 
-      <Section title="Décima tercera – Domicilios">
+      <Section title="Tasas e intereses">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="TNA – Tasa Nominal Anual (%)" error={errors.tna?.message}>
+            <input type="text" inputMode="decimal" placeholder="437,19" className={inputClass} {...register("tna")} />
+          </Field>
+          <Field label="TEM – Tasa Efectiva Mensual (%)" error={errors.tem?.message}>
+            <input type="text" inputMode="decimal" placeholder="36,43" className={inputClass} {...register("tem")} />
+          </Field>
+          <Field label="TEA – Tasa Efectiva Anual (%)" error={errors.tea?.message}>
+            <input type="text" inputMode="decimal" placeholder="4.059,16" className={inputClass} {...register("tea")} />
+          </Field>
+          <Field label="CFTEA con IVA (%)" error={errors.cftea?.message}>
+            <input type="text" inputMode="decimal" placeholder="7.904,87" className={inputClass} {...register("cftea")} />
+          </Field>
+          <Field label="Total de intereses compensatorios ($)">
+            <input
+              readOnly
+              tabIndex={-1}
+              className={readOnlyInputClass}
+              value={desglose ? pesos.format(desglose.intereses) : ""}
+            />
+          </Field>
+          <Field label="IVA sobre intereses ($)">
+            <input
+              readOnly
+              tabIndex={-1}
+              className={readOnlyInputClass}
+              value={desglose ? pesos.format(desglose.iva) : ""}
+            />
+          </Field>
+        </div>
+        <p className="mt-3 text-xs text-slate-500">
+          Los intereses y el IVA (21%) se calculan solos con la diferencia entre la suma total y el importe a prestar.
+        </p>
+      </Section>
+
+      <Section title="Número y fecha del contrato">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Número de contrato" error={errors.numeroContrato?.message}>
+            <input inputMode="numeric" placeholder="000001" className={inputClass} {...register("numeroContrato")} />
+          </Field>
           <Field label="Fecha de contrato" error={errors.fechaContrato?.message}>
             <DateField name="fechaContrato" className={inputClass} />
           </Field>
@@ -138,6 +213,14 @@ export function StepFormularioContrato() {
 
       <Section title="Pagaré">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Número de pagaré">
+            <input
+              readOnly
+              tabIndex={-1}
+              className={readOnlyInputClass}
+              value={numeroContrato ? numeroContrato.padStart(6, "0") : ""}
+            />
+          </Field>
           <Field label="Importe ($)">
             <input readOnly tabIndex={-1} className={readOnlyInputClass} value={montoADevolver || ""} />
           </Field>

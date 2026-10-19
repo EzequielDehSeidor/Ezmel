@@ -45,7 +45,10 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
         <h1 className={TITULO_CLASS}>{c.titulo}</h1>
         <Image src="/logo-tagline.png" alt="EzMel, servicios financieros" width={1200} height={436} unoptimized className="mx-auto mt-5 h-auto w-[220px]" />
 
-        <p className="mt-6 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
+        <p className="mt-6 text-sm text-slate-800">
+          <Segments segments={c.numero} />
+        </p>
+        <p className="mt-3 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
           <Segments segments={c.intro} />
         </p>
 
@@ -57,6 +60,10 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
             </p>
           </div>
         ))}
+
+        <p className="mt-6 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
+          <Segments segments={c.cierre} />
+        </p>
 
         <SectionBar>Firmas</SectionBar>
         <div className="space-y-12" style={{ marginTop: 40 }}>
@@ -78,25 +85,22 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
 
       <div className="mt-10 border-t-4 border-double border-[#1a5f6f] pt-6">
         <h1 className={TITULO_CLASS}>{c.pagare.titulo}</h1>
-        <p className="mt-4 text-sm text-slate-800">
-          <span className="font-semibold">Por:</span> <Segments segments={c.pagare.por} />
+        <p className="mt-2 text-center text-sm text-slate-800">{c.pagare.subtitulo}</p>
+        <p className="mt-4 whitespace-pre-wrap text-sm text-slate-800">
+          <Segments segments={c.pagare.encabezado} />
         </p>
-        <p className="text-sm text-slate-800">
-          <span className="font-semibold">Vence el día:</span>{" "}
-          <strong className={DATO_CLASS}>{c.pagare.vence}</strong>
-        </p>
-        <p className="mb-4 text-sm text-slate-800">
-          <Segments segments={c.pagare.lugar} />
+        <p className="mt-1 text-sm text-slate-800">
+          <Segments segments={c.pagare.por} />
         </p>
 
-        <p className="whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
+        <p className="mt-4 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
           <Segments segments={c.pagare.cuerpo} />
         </p>
         <p className="mt-3 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
-          <Segments segments={c.pagare.interes} />
+          <Segments segments={c.pagare.valor} />
         </p>
         <p className="mt-3 whitespace-pre-wrap text-justify text-sm leading-relaxed text-slate-800">
-          <Segments segments={c.pagare.ejecutivo} />
+          <Segments segments={c.pagare.lugarFecha} />
         </p>
 
         <div className="mt-12 flex flex-col text-sm text-slate-800" style={{ gap: 37 }}>
@@ -104,12 +108,14 @@ export function ContratoPreview({ datos }: { datos: ContratoDatosSchema }) {
             {c.pagare.firmanteLabel} {LINEA_NOMBRE}
           </p>
           <p>
-            Documento N.º: <strong className={DATO_CLASS}>{c.pagare.documento || LINEA_DNI}</strong>
+            Nombre y apellido: <strong className={DATO_CLASS}>{c.pagare.nombre || LINEA_NOMBRE}</strong>
+          </p>
+          <p>
+            DNI N°: <strong className={DATO_CLASS}>{c.pagare.documento || LINEA_DNI}</strong>
           </p>
           <p>
             Domicilio: <strong className={DATO_CLASS}>{c.pagare.domicilio || LINEA_NOMBRE}</strong>
           </p>
-          <p>Firma: {LINEA_DNI}</p>
         </div>
       </div>
     </div>

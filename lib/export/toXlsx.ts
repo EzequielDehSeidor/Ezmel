@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { LOGO_TAGLINE_ASPECT, LOGO_TAGLINE_PNG } from "@/lib/brand/logo";
 import { CHECKLIST_LABELS, FILE_CATEGORIES } from "@/lib/types/legajo";
 import { serviciosConDatos, type ExportFileData, type ExportInput } from "./common";
 
@@ -34,6 +35,16 @@ export async function generateXlsx(input: ExportInput): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Legajo");
   sheet.columns = [{ width: 34 }, { width: 60 }, { width: 18 }, { width: 34 }];
+
+  // Logo con el subtítulo arriba de todo, y el subtítulo al pie de cada hoja impresa, como en el Word y el PDF.
+  const logoId = workbook.addImage({ buffer: LOGO_TAGLINE_PNG as unknown as ExcelJS.Buffer, extension: "png" });
+  const LOGO_WIDTH = 190;
+  sheet.addImage(logoId, {
+    tl: { col: 0.1, row: 0.2 },
+    ext: { width: LOGO_WIDTH, height: Math.round(LOGO_WIDTH / LOGO_TAGLINE_ASPECT) },
+  });
+  for (let i = 0; i < 3; i++) sheet.addRow([]).height = 24;
+  sheet.headerFooter.oddFooter = '&R&"Arial,Regular"&7SERVICIOS FINANCIEROS';
 
   sectionRow(sheet, "Datos generales");
   labelValueRow(sheet, "Nombre y Apellido", data.nombreApellido);
@@ -82,6 +93,13 @@ export async function generateXlsx(input: ExportInput): Promise<Buffer> {
   sectionRow(sheet, "Responsable del legajo");
   labelValueRow(sheet, "Responsable", data.responsable);
   labelValueRow(sheet, "Fecha", data.fechaResponsable);
+
+  // Misma tipografía que el resto de los documentos.
+  sheet.eachRow((row) =>
+    row.eachCell((cell) => {
+      cell.font = { ...cell.font, name: "Arial" };
+    })
+  );
 
   const arrayBuffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(arrayBuffer);

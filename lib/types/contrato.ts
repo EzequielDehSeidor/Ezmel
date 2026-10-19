@@ -1,9 +1,14 @@
 export interface ContratoDatos {
+  // Contrato
+  numeroContrato: string;
+
   // Mutuario (deudor)
   mutuarioNombre: string;
   mutuarioDni: string;
   mutuarioDomicilio: string;
   mutuarioEmail: string;
+  mutuarioCbu: string;
+  mutuarioAlias: string;
 
   // Préstamo
   montoPrestado: number;
@@ -12,7 +17,12 @@ export interface ContratoDatos {
   importeCuota: number;
   periodicidadPago: "mensual" | "quincenal" | "semanal";
   fechaPrimeraCuota: string;
-  diasHabilesPago: number;
+
+  // Tasas (en %, tal como figuran en el contrato)
+  tna: number;
+  tem: number;
+  tea: number;
+  cftea: number;
 
   // Fechas del instrumento
   fechaContrato: string;

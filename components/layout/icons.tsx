@@ -70,3 +70,73 @@ export const ChevronRightIcon = ({ className }: IconProps) => (
     <path d="m9 6 6 6-6 6" />
   </Svg>
 );
+
+export const HistoryIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M12 8v4l2 2" />
+    <path d="M3.05 11a9 9 0 1 1 .5 4M3 4v7h7" />
+  </Svg>
+);
+
+export const UsersIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <circle cx="9" cy="7" r="4" />
+    <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+    <path d="M16 3.1a4 4 0 0 1 0 7.8M21 21v-2a4 4 0 0 0-3-3.9" />
+  </Svg>
+);
+
+export const TimelineIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M9 6h11M9 12h11M9 18h11M5 6h.01M5 12h.01M5 18h.01" />
+  </Svg>
+);
+
+export const CalculatorIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M4 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+    <path d="M8 6h8v3H8zM8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" />
+  </Svg>
+);
+
+export const CashIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M3 7h18v10H3z" />
+    <circle cx="12" cy="12" r="2.5" />
+    <path d="M7 12h.01M17 12h.01" />
+  </Svg>
+);
+
+export const CalendarCheckIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" />
+    <path d="M16 3v4M8 3v4M4 11h16M9 16l2 2 4-4" />
+  </Svg>
+);
+
+export const ChartIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M5 20v-8M12 20V5M19 20v-11M3 20h18" />
+  </Svg>
+);
+
+export const ShieldIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M12 3 5 6v6c0 4.4 3 7.5 7 9 4-1.5 7-4.6 7-9V6z" />
+    <path d="m9 12 2 2 4-4" />
+  </Svg>
+);
+
+export const UploadIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <path d="M12 16V4M7 9l5-5 5 5" />
+    <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+  </Svg>
+);
+
+export const UserPlusIcon = ({ className }: IconProps) => (
+  <Svg className={className}>
+    <circle cx="9" cy="8" r="4" />
+    <path d="M2 20a7 7 0 0 1 14 0M19 8v6M16 11h6" />
+  </Svg>
+);

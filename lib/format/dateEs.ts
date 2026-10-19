@@ -44,3 +44,10 @@ export function fechaPartes(iso: string): FechaPartes {
     mes: mes.charAt(0).toUpperCase() + mes.slice(1),
   };
 }
+
+/** "2026-10-14" -> "14/10/2026" */
+export function formatFechaCorta(iso: string): string {
+  const f = parseFechaISO(iso);
+  if (!f) return iso;
+  return `${String(f.dia).padStart(2, "0")}/${String(f.mes + 1).padStart(2, "0")}/${f.anio}`;
+}
