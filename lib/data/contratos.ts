@@ -3,6 +3,7 @@ import { isMockMode } from "@/lib/supabase/env";
 import { mockContratoStore } from "@/lib/mock/store";
 import { createClient } from "@/lib/supabase/server";
 import type { ContratoDatos, ContratoRecord } from "@/lib/types/contrato";
+import type { SaveContext } from "./legajos";
 
 /**
  * Persiste el contrato. En modo mock queda en memoria del proceso; en modo
@@ -10,13 +11,13 @@ import type { ContratoDatos, ContratoRecord } from "@/lib/types/contrato";
  */
 export async function saveContrato(
   datos: ContratoDatos,
-  createdBy: string | null
+  ctx: SaveContext
 ): Promise<ContratoRecord> {
   const record: ContratoRecord = {
     ...datos,
     id: randomUUID(),
     createdAt: new Date().toISOString(),
-    createdBy,
+    createdBy: ctx.userId,
   };
 
   if (isMockMode()) {
@@ -27,7 +28,8 @@ export async function saveContrato(
   const supabase = await createClient();
   const { error } = await supabase.from("contratos").insert({
     id: record.id,
-    created_by: createdBy,
+    tenant_id: ctx.tenantId,
+    created_by: ctx.userId,
     created_at: record.createdAt,
     datos,
   });

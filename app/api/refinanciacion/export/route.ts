@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import JSZip from "jszip";
+import { authorize } from "@/lib/auth/guards";
 import { refinanciacionSchema } from "@/lib/validation/refinanciacionSchema";
 import { generateRefinanciacionDocx } from "@/lib/export/toRefinanciacionDocx";
 import { generateRefinanciacionPdf } from "@/lib/export/toRefinanciacionPdf";
@@ -21,6 +22,9 @@ function slugify(value: string): string {
 }
 
 export async function POST(request: Request) {
+  const auth = await authorize("documentos:crear");
+  if (!auth.ok) return auth.response;
+
   const body = await request.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

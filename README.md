@@ -17,47 +17,28 @@ npm run dev
 
 Abrí [http://localhost:3000](http://localhost:3000).
 
-## Pasar a Supabase real
+## Pasar a Supabase real (tenants, roles y login)
 
-1. **Crear el proyecto**: entrá a [supabase.com](https://supabase.com) → "New project".
-   Guardá la contraseña de la base y esperá a que termine de aprovisionarse.
+La app es multi-tenant y con roles (`admin`, `operador`, `lectura`), con login por **Google** y por
+**email y contraseña** (Supabase Auth). El acceso es por invitación: crear una cuenta no alcanza,
+hay que estar invitado a un tenant con ese email.
 
-2. **Cargar el esquema**: en el proyecto, andá a *SQL Editor* → *New query*, pegá el
-   contenido de [`supabase/schema.sql`](supabase/schema.sql) y ejecutalo. Crea las tablas
-   `legajos` y `legajo_files` con Row Level Security habilitado.
+Guía completa, paso a paso (crear el proyecto, cargar la base, crear el tenant, configurar Google,
+variables de entorno y deploy en Netlify): **[docs/SUPABASE-Y-NETLIFY.md](docs/SUPABASE-Y-NETLIFY.md)**.
 
-3. **Crear el bucket de archivos**: *Storage* → *New bucket* → nombre `legajo-files`,
-   dejalo **privado** (no marcar "Public bucket"). Después aplicá las dos policies que
-   están comentadas al final de `supabase/schema.sql` (Storage → Policies → New policy →
-   pegar el SQL).
+Resumen:
 
-4. **Habilitar login con Google** (opcional, para el botón "Continuar con Google" real):
-   - En [Google Cloud Console](https://console.cloud.google.com/) creá credenciales OAuth
-     2.0 (tipo "Web application"). Como *Authorized redirect URI* usá la que te muestra
-     Supabase en el paso siguiente.
-   - En Supabase: *Authentication* → *Providers* → *Google* → activalo y pegá el Client ID
-     y Client Secret.
-   - Habilitá también *Email* en *Authentication* → *Providers* si querés que el
-     email/password use el mismo mecanismo (ya viene activado por defecto).
+1. Crear el proyecto en Supabase y correr [`supabase/schema.sql`](supabase/schema.sql) en el SQL Editor.
+2. Crear el primer tenant y su administrador con [`supabase/seed.sql`](supabase/seed.sql).
+3. En Supabase: activar *Confirm email*, cargar las URLs y configurar el proveedor Google.
+4. Copiar `.env.local.example` a `.env.local` y completar `NEXT_PUBLIC_SUPABASE_URL`,
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `NEXT_PUBLIC_SITE_URL`.
+5. Las mismas variables se cargan en Netlify antes del primer deploy.
 
-5. **Crear el usuario admin**: *Authentication* → *Users* → *Add user* (con email y
-   contraseña), o simplemente registralo por Google la primera vez que entre.
+En producción las variables de Supabase son **obligatorias**: si faltan, la app corta con un error
+en vez de abrirse sin login (el modo demo solo existe en desarrollo).
 
-6. **Variables de entorno**: copiá `.env.local.example` a `.env.local` y completá con los
-   valores de *Settings* → *API* del proyecto:
-
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
-   ```
-
-7. Reiniciá `npm run dev`. Apenas esas dos variables están presentes, la app deja el modo
-   mock automáticamente: el login usa Supabase Auth de verdad y los legajos (con sus
-   archivos) se guardan en la base y en Storage.
+Pruebas de la base de datos (aislamiento entre tenants, roles, invitaciones, Storage): `npm run test:db`.
 
 ## Estructura
 
@@ -67,8 +48,12 @@ Abrí [http://localhost:3000](http://localhost:3000).
 - `lib/pdf/pdfToPngPages.ts` — rasteriza los PDF adjuntos en el navegador (ver nota abajo)
 - `lib/export/` — generación de `.docx` (`docx`), `.pdf` (`@react-pdf/renderer`) y `.xlsx` (`exceljs`)
 - `lib/data/legajos.ts` — guarda el legajo (mock en memoria, o Supabase + Storage)
-- `lib/auth/session.ts`, `lib/supabase/`, `lib/mock/` — capa de auth unificada mock/Supabase
-- `supabase/schema.sql` — esquema de base de datos y policies de Storage
+- `lib/auth/` — sesión (`session.ts`), roles y permisos (`roles.ts`) y guardas para páginas y APIs (`guards.ts`)
+- `lib/supabase/`, `lib/mock/` — clientes de Supabase y modo demo (solo desarrollo)
+- `proxy.ts` — primer filtro: exige sesión y refresca el token de Supabase
+- `supabase/schema.sql` — tablas, funciones, RLS y Storage (multi-tenant y roles); `supabase/seed.sql` — alta del primer tenant
+- `supabase/tests/rls.test.mjs` — pruebas de seguridad de la base (`npm run test:db`)
+- `docs/SUPABASE-Y-NETLIFY.md` — guía de puesta en producción
 
 ### Adjuntos y PDF
 
@@ -93,7 +78,7 @@ Los assets de pdfjs (`worker`, `standard_fonts`, `cmaps`) viven en
 
 ## Notas de esta primera etapa
 
-- Sólo hay rol **admin**; el rol "usuario" queda para una siguiente etapa.
+- Roles: **admin**, **operador** y **solo lectura** (ver docs/SUPABASE-Y-NETLIFY.md). La pantalla para invitar y gestionar usuarios queda para una siguiente etapa; por ahora se hace desde el SQL Editor.
 - El cierre del legajo es "Responsable del legajo": quién lo armó y en qué
   fecha (campos de texto, no una firma manuscrita).
 - En modo mock los archivos adjuntos no se persisten (sólo viajan para generar la

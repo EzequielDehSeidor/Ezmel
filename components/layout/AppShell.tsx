@@ -41,11 +41,24 @@ const PROPUESTAS = [
   { href: "/usuarios", label: "Usuarios y permisos", Icon: ShieldIcon },
 ];
 
-export function AppShell({ email, children }: { email: string; children: ReactNode }) {
+interface AppShellProps {
+  email: string;
+  userName: string | null;
+  roleLabel: string;
+  tenantName: string;
+  /** Rol sin permiso para crear documentos (solo lectura). */
+  readOnly: boolean;
+  canManageUsers: boolean;
+  children: ReactNode;
+}
+
+export function AppShell({ email, userName, roleLabel, tenantName, readOnly, canManageUsers, children }: AppShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const anchoCompleto = ["/contratos", "/legajos", "/clientes"].includes(pathname); // el panel de tipos queda pegado al borde derecho
-  const initial = (email.trim().charAt(0) || "A").toUpperCase();
+  const initial = ((userName ?? email).trim().charAt(0) || "A").toUpperCase();
+  // La pantalla de usuarios es solo para administradores (igual se verifica en el servidor).
+  const propuestas = PROPUESTAS.filter((p) => p.href !== "/usuarios" || canManageUsers);
 
   function navLink(href: string, label: string, Icon: IconType, tenue = false) {
     const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -96,7 +109,7 @@ export function AppShell({ email, children }: { email: string; children: ReactNo
             {SECTIONS.map(({ href, label, Icon }) => navLink(href, label, Icon))}
 
             <p className="px-3 pb-1 pt-5 text-xs font-semibold uppercase tracking-wide text-white/60">En definición</p>
-            {PROPUESTAS.map(({ href, label, Icon }) => navLink(href, label, Icon, true))}
+            {propuestas.map(({ href, label, Icon }) => navLink(href, label, Icon, true))}
           </nav>
 
           <div className="mt-4 flex items-center gap-3 border-t border-white/20 px-1 pt-4">
@@ -104,14 +117,23 @@ export function AppShell({ email, children }: { email: string; children: ReactNo
               {initial}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold leading-tight">Administrador</p>
-              <p className="truncate text-xs text-white/75">{email}</p>
+              <p className="truncate text-sm font-semibold leading-tight" title={`${roleLabel} · ${tenantName}`}>
+                {roleLabel} · {tenantName}
+              </p>
+              <p className="truncate text-xs text-white/75" title={email}>
+                {userName ?? email}
+              </p>
             </div>
             <LogoutButton />
           </div>
         </aside>
 
         <main className={`min-w-0 flex-1 rounded-t-3xl bg-slate-50 px-4 py-6 [scrollbar-color:#a9cbcd_transparent] [scrollbar-width:thin] md:h-full md:overflow-y-auto md:rounded-3xl ${anchoCompleto ? "md:pl-8 md:pr-4" : "md:px-8"} md:py-8`}>
+          {readOnly && (
+            <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Tu rol es de solo lectura: podés consultar, pero no generar ni descargar documentos nuevos.
+            </p>
+          )}
           <div className={anchoCompleto ? "" : "mx-auto max-w-5xl"}>{children}</div>
         </main>
       </div>

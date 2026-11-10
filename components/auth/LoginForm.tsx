@@ -4,30 +4,55 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { isMockMode } from "@/lib/supabase/env";
 
-export function LoginForm() {
+type Mode = "login" | "signup";
+
+const inputClass =
+  "mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-[#6ACEC6]/40";
+
+export function LoginForm({ initialError = null }: { initialError?: string | null }) {
   const router = useRouter();
   const mock = isMockMode();
+  const [mode, setMode] = useState<Mode>("login");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState<"password" | "google" | null>(null);
+
+  const signup = mode === "signup";
+
+  function switchMode() {
+    setMode(signup ? "login" : "signup");
+    setError(null);
+    setInfo(null);
+  }
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     setLoading("password");
     try {
-      const endpoint = mock ? "/api/auth/mock-login" : "/api/auth/login";
+      const endpoint = mock ? "/api/auth/mock-login" : signup ? "/api/auth/signup" : "/api/auth/login";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, provider: "password" }),
+        body: JSON.stringify({ email, password, fullName, provider: "password" }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "No se pudo iniciar sesión");
+        setError(data.error ?? "No se pudo completar la operación");
         return;
       }
+
+      if (signup && data.needsConfirmation) {
+        setInfo("Te enviamos un email para confirmar tu cuenta. Confirmala y después iniciá sesión.");
+        setMode("login");
+        setPassword("");
+        return;
+      }
+
       router.push("/");
       router.refresh();
     } finally {
@@ -37,6 +62,7 @@ export function LoginForm() {
 
   async function handleGoogle() {
     setError(null);
+    setInfo(null);
     setLoading("google");
     try {
       if (mock) {
@@ -56,18 +82,44 @@ export function LoginForm() {
 
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
-      await supabase.auth.signInWithOAuth({
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: { prompt: "select_account" },
+        },
       });
-    } finally {
-      setLoading(null);
+      if (oauthError) {
+        setError("No se pudo iniciar sesión con Google");
+        return;
+      }
+      // Si no hubo error el navegador ya está yendo a Google: se deja el botón bloqueado.
+      return;
+    } catch {
+      setError("No se pudo iniciar sesión con Google");
     }
+    setLoading(null);
   }
 
   return (
     <div>
       <form onSubmit={handlePasswordSubmit} className="space-y-4">
+        {signup && !mock && (
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-semibold text-slate-900">
+              Nombre y apellido
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              autoComplete="name"
+              maxLength={120}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+        )}
         <div>
           <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
             Email
@@ -76,9 +128,10 @@ export function LoginForm() {
             id="email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-[#6ACEC6]/40"
+            className={inputClass}
           />
         </div>
         <div>
@@ -89,22 +142,49 @@ export function LoginForm() {
             id="password"
             type="password"
             required
+            minLength={signup && !mock ? 8 : undefined}
+            autoComplete={signup ? "new-password" : "current-password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-[#6ACEC6]/40"
+            className={inputClass}
           />
+          {signup && !mock && <p className="mt-1 text-xs text-slate-500">Mínimo 8 caracteres.</p>}
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
+        {info && (
+          <p role="status" className="text-sm text-emerald-700">
+            {info}
+          </p>
+        )}
 
         <button
           type="submit"
           disabled={loading !== null}
           className="w-full rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-white shadow-md hover:bg-brand-hover disabled:opacity-60"
         >
-          {loading === "password" ? "Ingresando..." : "Iniciar sesión"}
+          {loading === "password"
+            ? signup
+              ? "Creando cuenta..."
+              : "Ingresando..."
+            : signup && !mock
+              ? "Crear cuenta"
+              : "Iniciar sesión"}
         </button>
       </form>
+
+      {!mock && (
+        <p className="mt-3 text-center text-sm text-slate-600">
+          {signup ? "¿Ya tenés cuenta?" : "¿Te invitaron?"}{" "}
+          <button type="button" onClick={switchMode} className="font-semibold text-brand hover:underline">
+            {signup ? "Iniciá sesión" : "Creá tu cuenta"}
+          </button>
+        </p>
+      )}
 
       <div className="my-5 flex items-center gap-3">
         <div className="h-px flex-1 bg-slate-200" />

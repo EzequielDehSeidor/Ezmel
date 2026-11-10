@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import JSZip from "jszip";
-import { getServerSession } from "@/lib/auth/session";
+import { authorize } from "@/lib/auth/guards";
 import { legajoFormSchema } from "@/lib/validation/legajoSchema";
 import { FILE_CATEGORIES } from "@/lib/types/legajo";
 import type { ExportFormat } from "@/lib/types/legajo";
@@ -26,7 +26,19 @@ function slugify(value: string): string {
   );
 }
 
+function safeJson(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
+  const auth = await authorize("documentos:crear");
+  if (!auth.ok) return auth.response;
+  const { session } = auth;
+
   const formData = await request.formData();
 
   const rawData = formData.get("data");
@@ -35,12 +47,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Faltan datos del legajo" }, { status: 400 });
   }
 
-  const parsedData = legajoFormSchema.safeParse(JSON.parse(rawData));
+  const parsedData = legajoFormSchema.safeParse(safeJson(rawData));
   if (!parsedData.success) {
     return NextResponse.json({ error: "Datos del legajo inválidos" }, { status: 400 });
   }
 
-  const formats = (JSON.parse(rawFormats) as string[]).filter(
+  const formats = ((safeJson(rawFormats) as string[] | null) ?? []).filter(
     (f): f is ExportFormat => f === "docx" || f === "pdf" || f === "xlsx"
   );
   if (formats.length === 0) {
@@ -50,7 +62,7 @@ export async function POST(request: Request) {
   // El cliente manda un `meta` por adjunto (leyenda y tamaño), en el mismo
   // orden en que agregó los archivos de cada categoría.
   const rawMeta = formData.get("meta");
-  const meta: AttachmentMeta[] = typeof rawMeta === "string" ? JSON.parse(rawMeta) : [];
+  const meta: AttachmentMeta[] = typeof rawMeta === "string" ? ((safeJson(rawMeta) as AttachmentMeta[] | null) ?? []) : [];
 
   const fileUploads: FileUpload[] = [];
   const filesByKey: ExportInput["files"] = {};
@@ -77,8 +89,7 @@ export async function POST(request: Request) {
 
   const input: ExportInput = { data: parsedData.data, files: filesByKey };
 
-  const session = await getServerSession();
-  const record = await saveLegajo(parsedData.data, fileUploads, session?.email ?? null);
+  const record = await saveLegajo(parsedData.data, fileUploads, { tenantId: session.tenant.id, userId: session.userId });
 
   const baseName = `Legajo_${slugify(
       parsedData.data.nombreApellido ||

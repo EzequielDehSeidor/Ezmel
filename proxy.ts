@@ -14,6 +14,19 @@ function isPublicPath(pathname: string) {
   );
 }
 
+/** Sin sesión: las páginas redirigen al login y las APIs responden 401 (no HTML). */
+function unauthenticated(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Tu sesión venció. Volvé a iniciar sesión." }, { status: 401 });
+  }
+  return NextResponse.redirect(new URL("/login", request.url));
+}
+
+/**
+ * Primer filtro: exige estar autenticado y refresca la sesión de Supabase. Es sólo una
+ * barrera "optimista": el tenant y el rol se verifican en cada página y en cada API
+ * (lib/auth/guards.ts) y, por último, en la base de datos con RLS.
+ */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (isPublicPath(pathname)) {
@@ -22,10 +35,7 @@ export async function proxy(request: NextRequest) {
 
   if (isMockMode()) {
     const session = decodeMockSession(request.cookies.get(MOCK_COOKIE_NAME)?.value);
-    if (!session) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-    return NextResponse.next();
+    return session ? NextResponse.next() : unauthenticated(request);
   }
 
   let response = NextResponse.next({ request });
@@ -45,12 +55,13 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // getUser() valida el token contra Supabase (no confía sólo en la cookie).
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return unauthenticated(request);
   }
 
   return response;

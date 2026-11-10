@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const email = typeof body?.email === "string" ? body.email : "";
+  const email = typeof body?.email === "string" ? body.email.trim() : "";
   const password = typeof body?.password === "string" ? body.password : "";
 
   if (!email || !password) {
@@ -20,7 +20,11 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 401 });
+    if (error.code === "email_not_confirmed") {
+      return NextResponse.json({ error: "Confirmá tu email antes de ingresar (revisá tu casilla)." }, { status: 401 });
+    }
+    // Mismo mensaje para "no existe" y "contraseña incorrecta": no revela qué emails tienen cuenta.
+    return NextResponse.json({ error: "Email o contraseña incorrectos" }, { status: 401 });
   }
 
   return NextResponse.json({ ok: true });

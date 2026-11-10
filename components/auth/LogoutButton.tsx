@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogoutIcon } from "@/components/layout/icons";
 
-export function LogoutButton() {
+export function LogoutButton({ variant = "icon" }: { variant?: "icon" | "text" }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -17,6 +17,19 @@ export function LogoutButton() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (variant === "text") {
+    return (
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loading}
+        className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-brand-hover disabled:opacity-60"
+      >
+        {loading ? "Cerrando sesión..." : "Cerrar sesión"}
+      </button>
+    );
   }
 
   return (

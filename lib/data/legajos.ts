@@ -4,6 +4,12 @@ import { mockLegajoStore } from "@/lib/mock/store";
 import { createClient } from "@/lib/supabase/server";
 import type { LegajoFileCategoryKey, LegajoFormValues, LegajoRecord } from "@/lib/types/legajo";
 
+/** Quién guarda y en qué tenant: sale de la sesión verificada en el servidor, nunca del cliente. */
+export interface SaveContext {
+  tenantId: string;
+  userId: string;
+}
+
 export interface FileUpload {
   key: LegajoFileCategoryKey;
   name: string;
@@ -14,12 +20,14 @@ export interface FileUpload {
 /**
  * Persiste el legajo. En modo mock queda en memoria del proceso (sin los
  * binarios de los archivos); en modo Supabase real sube los archivos al
- * bucket `legajo-files` y guarda las filas en `legajos` / `legajo_files`.
+ * bucket `legajo-files` (carpeta del tenant) y guarda las filas en `legajos` /
+ * `legajo_files`. La base aplica RLS con la sesión del usuario: sólo puede guardar
+ * en su propio tenant y si su rol lo permite.
  */
 export async function saveLegajo(
   values: LegajoFormValues,
   files: FileUpload[],
-  createdBy: string | null
+  ctx: SaveContext
 ): Promise<LegajoRecord> {
   const id = randomUUID();
   const fileNames: Partial<Record<LegajoFileCategoryKey, string[]>> = {};
@@ -29,7 +37,7 @@ export async function saveLegajo(
     ...values,
     id,
     createdAt: new Date().toISOString(),
-    createdBy,
+    createdBy: ctx.userId,
     fileNames,
   };
 
@@ -42,7 +50,8 @@ export async function saveLegajo(
 
   const { error: insertError } = await supabase.from("legajos").insert({
     id,
-    created_by: createdBy,
+    tenant_id: ctx.tenantId,
+    created_by: ctx.userId,
     created_at: record.createdAt,
     data: values,
     file_names: fileNames,
@@ -53,15 +62,18 @@ export async function saveLegajo(
   for (const file of files) {
     const index = (indexByKey[file.key] ?? 0) + 1;
     indexByKey[file.key] = index;
-    const path = `${id}/${file.key}-${index}-${file.name}`;
+    // Carpeta del tenant primero: las policies de Storage aíslan por esa carpeta.
+    const safeName = file.name.replace(/[^w.-]+/g, "_").slice(-120);
+    const path = `${ctx.tenantId}/${id}/${file.key}-${index}-${safeName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("legajo-files")
-      .upload(path, file.buffer, { contentType: file.type, upsert: true });
+      .upload(path, file.buffer, { contentType: file.type, upsert: false });
     if (uploadError) throw new Error(uploadError.message);
 
     const observaciones = (values as unknown as Record<string, string>)[`${file.key}Obs`] ?? "";
     const { error: fileRowError } = await supabase.from("legajo_files").insert({
+      tenant_id: ctx.tenantId,
       legajo_id: id,
       slot_key: file.key,
       file_name: file.name,

@@ -4,7 +4,13 @@ import { getServerSession } from "@/lib/auth/session";
 import { isMockMode } from "@/lib/supabase/env";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export default async function LoginPage() {
+const ERROR_MESSAGES: Record<string, string> = {
+  auth: "No se pudo completar el inicio de sesión. Probá de nuevo.",
+  oauth: "No se pudo iniciar sesión con Google. Probá de nuevo.",
+};
+
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   const session = await getServerSession();
   if (session) {
     redirect("/");
@@ -48,7 +54,7 @@ export default async function LoginPage() {
 
           <section className="flex flex-col justify-center p-8 md:p-12">
             <h1 className="text-3xl font-bold text-[#1a5f6f]">Iniciar sesión</h1>
-            <p className="mt-1 text-sm text-slate-600">Acceso administrador</p>
+            <p className="mt-1 text-sm text-slate-600">Ingresá con tu cuenta</p>
 
             {isMockMode() && (
               <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -58,7 +64,7 @@ export default async function LoginPage() {
             )}
 
             <div className="mt-6">
-              <LoginForm />
+              <LoginForm initialError={(error && ERROR_MESSAGES[error]) || null} />
             </div>
           </section>
         </div>

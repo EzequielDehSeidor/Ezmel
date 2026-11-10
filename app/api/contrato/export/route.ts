@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import JSZip from "jszip";
-import { getServerSession } from "@/lib/auth/session";
+import { authorize } from "@/lib/auth/guards";
 import { contratoDatosSchema } from "@/lib/validation/contratoSchema";
 import { saveContrato } from "@/lib/data/contratos";
 import { generateContratoDocx } from "@/lib/export/toContratoDocx";
@@ -23,6 +23,10 @@ function slugify(value: string): string {
 }
 
 export async function POST(request: Request) {
+  const auth = await authorize("documentos:crear");
+  if (!auth.ok) return auth.response;
+  const { session } = auth;
+
   const body = await request.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
@@ -40,8 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Elegí al menos un formato" }, { status: 400 });
   }
 
-  const session = await getServerSession();
-  const record = await saveContrato(parsedDatos.data, session?.email ?? null);
+  const record = await saveContrato(parsedDatos.data, { tenantId: session.tenant.id, userId: session.userId });
 
   const baseName = `Contrato_${slugify(parsedDatos.data.mutuarioNombre || record.id)}`;
 
